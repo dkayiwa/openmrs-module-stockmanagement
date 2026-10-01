@@ -1,6 +1,6 @@
 package org.openmrs.module.stockmanagement.api.reporting;
 
-import org.apache.commons.lang.*;
+import org.apache.commons.lang3.*;
 import org.apache.commons.logging.Log;
 import org.openmrs.module.stockmanagement.api.StockManagementService;
 import org.openmrs.module.stockmanagement.api.dto.StockItemInventorySearchFilter;
@@ -254,7 +254,7 @@ public abstract class ReportGenerator {
 			if (properties.containsKey(key)) {
 
 				String value = properties.getProperty(key);
-				if(org.apache.commons.lang.StringUtils.isBlank(value)){
+				if(org.apache.commons.lang3.StringUtils.isBlank(value)){
 					return null;
 				}
 				String[] values = value.split(",");

@@ -22,7 +22,7 @@ import org.openmrs.module.webservices.rest.web.response.ResponseException;
 import java.math.BigDecimal;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/stockoperationactionlineitem", supportedClass = StockOperationActionLineItem.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class StockOperationActionLineItemResource extends ResourceBase<StockOperationActionLineItem> {
 	
 	@Override

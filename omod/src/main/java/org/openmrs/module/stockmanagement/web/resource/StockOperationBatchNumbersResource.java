@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/stockoperationbatchnumbers", supportedClass = StockOperationBatchNumbersDTO.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class StockOperationBatchNumbersResource extends ResourceBase<StockOperationBatchNumbersDTO> {
 	
 	@Override

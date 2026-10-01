@@ -1,10 +1,12 @@
 package org.openmrs.module.stockmanagement.api.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.openmrs.BaseChangeableOpenmrsData;
 import org.openmrs.Location;
 import org.openmrs.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
@@ -24,10 +26,12 @@ public class BatchJob extends BaseChangeableOpenmrsData implements Serializable 
 	
 	@Column(name = "batch_job_type", length = 50)
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.VARCHAR)
 	private BatchJobType batchJobType;
 	
 	@Column(name = "status", length = 50)
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.VARCHAR)
 	private BatchJobStatus status;
 	
 	@Column(name = "description", length = 255)

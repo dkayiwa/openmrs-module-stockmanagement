@@ -1,5 +1,7 @@
 package org.openmrs.module.stockmanagement.api.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.openmrs.BaseChangeableOpenmrsData;
 import org.openmrs.BaseOpenmrsData;
 import org.openmrs.Location;
@@ -10,7 +12,7 @@ import org.openmrs.module.stockmanagement.api.impl.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Set;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * The persistent class for the stockmgmt_stock_operation_type database table.
@@ -38,6 +40,7 @@ public class StockOperationType extends BaseChangeableOpenmrsData implements Ser
 	
 	@Column(name = "source_type", nullable = true, length = 50)
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.VARCHAR)
 	private LocationType sourceType;
 	
 	@Column(name = "has_destination")
@@ -45,6 +48,7 @@ public class StockOperationType extends BaseChangeableOpenmrsData implements Ser
 	
 	@Column(name = "destination_type", nullable = true, length = 50)
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.VARCHAR)
 	private LocationType destinationType;
 	
 	@Column(name = "available_when_reserved")

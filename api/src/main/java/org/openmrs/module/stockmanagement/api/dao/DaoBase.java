@@ -13,14 +13,9 @@
  */
 package org.openmrs.module.stockmanagement.api.dao;
 
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
 import org.hibernate.transform.AliasToBeanResultTransformer;
-import org.hibernate.transform.ResultTransformer;
-import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.api.db.hibernate.search.session.SearchSessionFactory;
 import org.openmrs.module.stockmanagement.api.IPagingInfo;
@@ -45,8 +40,8 @@ public class DaoBase {
 		this.searchSessionFactory = searchSessionFactory;
 	}
 
-	public DbSession getSession() {
-		return sessionFactory.getCurrentSession();
+	public Session getSession() {
+		return sessionFactory.getHibernateSessionFactory().getCurrentSession();
 	}
 	
 	/**
@@ -87,82 +82,6 @@ public class DaoBase {
 	}
 	
 	@SuppressWarnings({ "unchecked" })
-	protected <T> List<T> executeCriteria(Criteria criteria, IPagingInfo pagingInfo, Order... orderBy) {
-		
-		loadPagingTotal(pagingInfo, criteria);
-		
-		if (orderBy != null && orderBy.length > 0) {
-			for (Order order : orderBy) {
-				criteria.addOrder(order);
-			}
-		}
-		return createPagingCriteria(pagingInfo, criteria).list();
-	}
-	
-	/**
-	 * Loads the record count for the specified criteria into the specified paging object.
-	 * 
-	 * @param pagingInfo The {@link IPagingInfo} object to load with the record count.
-	 * @param criteria The {@link Criteria} to execute against the hibernate data source or
-	 *            {@code null} to create a new one.
-	 */
-	protected void loadPagingTotal(IPagingInfo pagingInfo, Criteria criteria) {
-		if (pagingInfo != null && pagingInfo.getPageIndex() != null && pagingInfo.getPageSize() != null
-		        && pagingInfo.getPageIndex() >= 0 && pagingInfo.getPageSize() >= 0) {
-			if (criteria == null) {
-				return;
-			}
-			
-			if (pagingInfo.shouldLoadRecordCount()) {
-				// Copy the current projection and transformer which requires getting access to the underlying criteria
-				// implementation
-				Projection projection = null;
-				ResultTransformer transformer = null;
-				
-				CriteriaImplWrapper impl = new CriteriaImplWrapper(criteria);
-				//CriteriaImpl impl = Utility.as(CriteriaImpl.class, criteria);
-				if (impl != null) {
-					projection = impl.getProjection();
-					transformer = impl.getResultTransformer();
-				}
-				
-				try {
-					criteria.setProjection(Projections.rowCount());
-					
-					Long count = (Long) criteria.uniqueResult();
-					pagingInfo.setTotalRecordCount(count == null ? 0 : count);
-					pagingInfo.setLoadRecordCount(false);
-				}
-				finally {
-					// Reset the criteria projection and transformer to return the result rather than the row count
-					criteria.setProjection(projection);
-					criteria.setResultTransformer(transformer);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Updates the specified {@link Criteria} object to retrieve the data specified by the
-	 * {@link IPagingInfo} object.
-	 * 
-	 * @param pagingInfo The {@link IPagingInfo} object that specifies which data should be
-	 *            retrieved.
-	 * @param criteria The {@link Criteria} to add the paging settings to, or {@code null} to create
-	 *            a new one.
-	 * @return The {@link Criteria} object with the paging settings applied.
-	 */
-	protected Criteria createPagingCriteria(IPagingInfo pagingInfo, Criteria criteria) {
-		if (criteria != null && pagingInfo != null && pagingInfo.getPageIndex() != null && pagingInfo.getPageSize() != null
-		        && pagingInfo.getPageIndex() >= 0 && pagingInfo.getPageSize() >= 0) {
-			criteria.setFirstResult((pagingInfo.getPageIndex()) * pagingInfo.getPageSize());
-			criteria.setMaxResults(pagingInfo.getPageSize());
-			criteria.setFetchSize(pagingInfo.getPageSize());
-		}
-		return criteria;
-	}
-	
-	@SuppressWarnings({ "unchecked" })
 	protected <T> List<T> executeQuery(Class dtoClass, StringBuilder query, IPagingInfo pagingInfo, String order,
 	        HashMap<String, Object> parameters, HashMap<String, Collection> parametersWithList) {
 		
@@ -183,7 +102,7 @@ public class DaoBase {
 				// Copy the current projection and transformer which requires getting access to the underlying criteria
 				// implementation
 				
-				DbSession dbSession = getSession();
+				Session dbSession = getSession();
 				Query queryCount = dbSession.createQuery(getCountQuery(query.toString()));
 				if (parameters != null) {
 					for (Map.Entry<String, Object> entry : parameters.entrySet())
@@ -227,7 +146,7 @@ public class DaoBase {
 			return null;
 		}
 		
-		DbSession dbSession = getSession();
+		Session dbSession = getSession();
 		StringBuilder stringBuilder = new StringBuilder(hqlQuery);
 		if (order != null)
 			stringBuilder.append(order);
@@ -241,7 +160,9 @@ public class DaoBase {
 				query.setParameterList(entry.getKey(), entry.getValue());
 		}
 		
-		query = query.setResultTransformer(new AliasToBeanResultTransformer(dtoClass));
+		if (dtoClass != null) {
+			query = query.setResultTransformer(new AliasToBeanResultTransformer(dtoClass));
+		}
 		
 		if (pagingInfo != null && pagingInfo.getPageIndex() != null && pagingInfo.getPageSize() != null
 		        && pagingInfo.getPageIndex() >= 0 && pagingInfo.getPageSize() >= 0) {

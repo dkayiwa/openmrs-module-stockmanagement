@@ -9,9 +9,9 @@
  */
 package org.openmrs.module.stockmanagement.api.impl;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.openmrs.*;
 import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
@@ -41,7 +41,7 @@ import org.openmrs.notification.Template;
 import org.openmrs.util.OpenmrsConstants;
 import org.springframework.util.Assert;
 
-import javax.mail.Session;
+import jakarta.mail.Session;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.*;
@@ -3013,17 +3013,17 @@ public class StockManagementServiceImpl extends BaseOpenmrsService implements St
                 stockOperationDTO.getResponsiblePersonFamilyName() != null ? String.format("%1$s %2$s", stockOperationDTO.getResponsiblePersonFamilyName(), stockOperationDTO.getResponsiblePersonGivenName()) : stockOperationDTO.getResponsiblePersonOther()));
         basicInfo.append(String.format("<tr><td style='padding: 0.2rem 0.5rem; font-size: 95%%;'><b>%1$s:</b></td><td style='padding: 0.2rem 0.5rem; font-size: 95%%;'>%2$s</td>",
                 messageSourceService.getMessage("stockmanagement.stockoperation.notification.remarks"),
-                stockOperationDTO.getRemarks() != null ? StringEscapeUtils.escapeHtml(stockOperationDTO.getRemarks()): "&nbsp;"
+                stockOperationDTO.getRemarks() != null ? StringEscapeUtils.escapeHtml4(stockOperationDTO.getRemarks()): "&nbsp;"
                 ));
         if(action == StockOperationAction.Action.RETURN){
             basicInfo.append(String.format("<tr><td style='padding: 0.2rem 0.5rem; font-size: 95%%;'><b>%1$s:</b></td><td style='padding: 0.2rem 0.5rem; font-size: 95%%;'>%2$s</td>",
                     messageSourceService.getMessage("stockmanagement.stockoperation.notification.returnreason"),
-                    actionReason != null ? StringEscapeUtils.escapeHtml(actionReason): "&nbsp;"
+                    actionReason != null ? StringEscapeUtils.escapeHtml4(actionReason): "&nbsp;"
             ));
         }else if(action == StockOperationAction.Action.REJECT){
             basicInfo.append(String.format("<tr><td style='padding: 0.2rem 0.5rem; font-size: 95%%;'><b>%1$s:</b></td><td style='padding: 0.2rem 0.5rem; font-size: 95%%;'>%2$s</td>",
                     messageSourceService.getMessage("stockmanagement.stockoperation.notification.rejectionreason"),
-                    actionReason != null ? StringEscapeUtils.escapeHtml(actionReason): "&nbsp;"
+                    actionReason != null ? StringEscapeUtils.escapeHtml4(actionReason): "&nbsp;"
             ));
         }
 

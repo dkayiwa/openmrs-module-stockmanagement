@@ -27,6 +27,7 @@ import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceD
 import org.openmrs.module.webservices.rest.web.response.IllegalRequestException;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -157,6 +158,7 @@ public class BatchJobResource extends ResourceBase<BatchJobDTO> {
 	
 	@Override
 	public BatchJobDTO save(BatchJobDTO delegate) {
+		ValidateUtil.validate(delegate);
 		return getStockManagementService().saveBatchJob(delegate);
 	}
 	

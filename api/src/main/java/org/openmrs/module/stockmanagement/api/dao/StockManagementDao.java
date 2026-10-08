@@ -1239,8 +1239,9 @@ public class StockManagementDao extends DaoBase {
 
         HashMap<String, Object> parameterList = new HashMap<>();
         if (location != null) {
-            appendFilter(hqlQuery, "ursl.location = :location or lt.childLocationId = :location");
+            appendFilter(hqlQuery, "ursl.location = :location or lt.childLocationId = :locationId");
             parameterList.putIfAbsent("location", location);
+            parameterList.putIfAbsent("locationId", location.getLocationId());
         }
 
         if (stockOperationType != null) {

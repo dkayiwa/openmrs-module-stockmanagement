@@ -24,6 +24,7 @@ import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceD
 import org.openmrs.module.webservices.rest.web.response.IllegalRequestException;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -104,6 +105,7 @@ public class StockRuleResource extends ResourceBase<StockRuleDTO> {
 	
 	@Override
 	public StockRuleDTO save(StockRuleDTO delegate) {
+		ValidateUtil.validate(delegate);
 		return getStockManagementService().saveStockRule(delegate);
 	}
 	

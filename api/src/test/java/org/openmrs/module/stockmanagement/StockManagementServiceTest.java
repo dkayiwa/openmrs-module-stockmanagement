@@ -63,7 +63,7 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 	
 	private StockManagementDao daoInstance;
 	
-	private static EntityUtil entityUtil;
+	private EntityUtil entityUtil;
 	
 	private StockManagementDao dao() {
 		if (daoInstance == null) {
@@ -392,7 +392,67 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 		stockManagementService.setDao(dao());
 		dao().getFlattenedUserRoleScopesByUser(eu().getUser(), new HashSet<Role>(Arrays.asList(eu().getRole())), null, null);
 	}
-	
+
+	@Test
+	public void getFlattenedUserRoleScopesByUser_shouldFilterByLocationIncludingDescendants() {
+		User user = Context.getUserService().getUser(501);
+		Role role = Context.getUserService().getRole("Provider");
+		Location parent = Context.getLocationService().getLocation(1);
+		Location child = Context.getLocationService().getLocation(2);
+		Location unrelated = Context.getLocationService().getLocation(3);
+		Date now = new Date();
+
+		UserRoleScope userRoleScope = new UserRoleScope();
+		userRoleScope.setUser(user);
+		userRoleScope.setRole(role);
+		userRoleScope.setEnabled(true);
+		userRoleScope.setPermanent(true);
+		userRoleScope.setCreator(user);
+		userRoleScope.setDateCreated(now);
+		dao().saveUserRoleScope(userRoleScope);
+
+		UserRoleScopeLocation scopeLocation = new UserRoleScopeLocation();
+		scopeLocation.setUserRoleScope(userRoleScope);
+		scopeLocation.setLocation(parent);
+		scopeLocation.setEnableDescendants(true);
+		scopeLocation.setCreator(user);
+		scopeLocation.setDateCreated(now);
+		dao().saveUserRoleScopeLocation(scopeLocation);
+
+		UserRoleScopeOperationType scopeOperationType = new UserRoleScopeOperationType();
+		scopeOperationType.setUserRoleScope(userRoleScope);
+		scopeOperationType.setStockOperationType(dao().getAllStockOperationTypes().get(0));
+		scopeOperationType.setCreator(user);
+		scopeOperationType.setDateCreated(now);
+		dao().saveUserRoleScopeOperationType(scopeOperationType);
+
+		for (Location location : Arrays.asList(parent, child)) {
+			LocationTree node = new LocationTree();
+			node.setParentLocationId(parent.getLocationId());
+			node.setChildLocationId(location.getLocationId());
+			node.setDepth(location.equals(parent) ? 0 : 1);
+			dao().saveLocationTree(node);
+
+			Party party = new Party();
+			party.setLocation(location);
+			party.setCreator(user);
+			party.setDateCreated(now);
+			dao().saveParty(party);
+		}
+		Context.flushSession();
+
+		Set<Role> roles = new HashSet<>(Arrays.asList(role));
+		assertThat(locationUuids(dao().getFlattenedUserRoleScopesByUser(user, roles, parent, null)),
+		    containsInAnyOrder(parent.getUuid(), child.getUuid()));
+		assertThat(locationUuids(dao().getFlattenedUserRoleScopesByUser(user, roles, child, null)),
+		    is(Collections.singletonList(child.getUuid())));
+		assertThat(dao().getFlattenedUserRoleScopesByUser(user, roles, unrelated, null), is(empty()));
+	}
+
+	private List<String> locationUuids(List<PrivilegeScope> privilegeScopes) {
+		return privilegeScopes.stream().map(PrivilegeScope::getLocationUuid).collect(Collectors.toList());
+	}
+
 	@Test
     public void findStockItemPackagingUOMs_shouldFilterOnAllCriteria(){
         stockManagementService.setDao(dao());

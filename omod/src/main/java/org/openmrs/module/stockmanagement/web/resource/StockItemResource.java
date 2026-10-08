@@ -29,6 +29,7 @@ import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceD
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
 import org.openmrs.util.LocaleUtility;
+import org.openmrs.validator.ValidateUtil;
 import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
@@ -200,6 +201,7 @@ public class StockItemResource extends ResourceBase<StockItemDTO> {
 	
 	@Override
 	public StockItemDTO save(StockItemDTO delegate) {
+		ValidateUtil.validate(delegate);
 		try {
 			StockItem stockItem = getStockManagementService().saveStockItem(delegate);
 			return getByUniqueId(stockItem.getUuid());

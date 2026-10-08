@@ -40,7 +40,7 @@ public class StockManagementDaoTest extends BaseModuleContextSensitiveTest {
 	
 	private StockManagementDao daoInstance;
 	
-	private static EntityUtil entityUtil;
+	private EntityUtil entityUtil;
 	
 	private StockManagementDao dao() {
 		if (daoInstance == null) {

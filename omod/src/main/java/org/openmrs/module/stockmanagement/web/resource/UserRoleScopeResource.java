@@ -23,6 +23,7 @@ import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceD
 import org.openmrs.module.webservices.rest.web.response.IllegalRequestException;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -103,6 +104,7 @@ public class UserRoleScopeResource extends ResourceBase<UserRoleScopeDTO> {
 	
 	@Override
 	public UserRoleScopeDTO save(UserRoleScopeDTO delegate) {
+		ValidateUtil.validate(delegate);
 		UserRoleScope userRoleScope = getStockManagementService().saveUserRoleScope(delegate);
 		return getByUniqueId(userRoleScope.getUuid());
 	}

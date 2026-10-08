@@ -21,6 +21,7 @@ import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -69,6 +70,7 @@ public class StockItemPackagingUOMResource extends ResourceBase<StockItemPackagi
 	
 	@Override
 	public StockItemPackagingUOMDTO save(StockItemPackagingUOMDTO delegate) {
+		ValidateUtil.validate(delegate);
 		StockItemPackagingUOM stockItemPackagingUOM = getStockManagementService().saveStockItemPackagingUOM(delegate);
 		return getByUniqueId(stockItemPackagingUOM.getUuid());
 	}

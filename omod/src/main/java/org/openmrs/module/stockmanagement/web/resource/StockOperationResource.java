@@ -29,6 +29,7 @@ import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.impl.*;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 import org.springframework.web.client.RestClientException;
 
 import java.util.*;
@@ -188,6 +189,7 @@ public class StockOperationResource extends ResourceBase<StockOperationDTO> {
 	
 	@Override
 	public StockOperationDTO save(StockOperationDTO delegate) {
+		ValidateUtil.validate(delegate);
 		try {
 			StockOperation stockOperation = getStockManagementService().saveStockOperation(delegate);
 			return getByUniqueId(stockOperation.getUuid());

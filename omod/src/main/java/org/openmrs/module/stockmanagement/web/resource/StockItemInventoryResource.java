@@ -4,8 +4,8 @@ import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
 import io.swagger.models.properties.StringProperty;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.openmrs.Concept;
 import org.openmrs.Drug;
 import org.openmrs.Location;
@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/stockiteminventory", supportedClass = StockItemInventory.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class StockItemInventoryResource extends ResourceBase<StockItemInventory> {
 	
 	@Override

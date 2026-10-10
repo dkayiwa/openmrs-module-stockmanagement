@@ -4,7 +4,7 @@ import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
 import io.swagger.models.properties.StringProperty;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Concept;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
@@ -29,13 +29,14 @@ import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.impl.*;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 import org.springframework.web.client.RestClientException;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/stockoperation", supportedClass = StockOperationDTO.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class StockOperationResource extends ResourceBase<StockOperationDTO> {
 	
 	private Map<String, SimpleObject> permissionCache;
@@ -188,6 +189,7 @@ public class StockOperationResource extends ResourceBase<StockOperationDTO> {
 	
 	@Override
 	public StockOperationDTO save(StockOperationDTO delegate) {
+		ValidateUtil.validate(delegate);
 		try {
 			StockOperation stockOperation = getStockManagementService().saveStockOperation(delegate);
 			return getByUniqueId(stockOperation.getUuid());

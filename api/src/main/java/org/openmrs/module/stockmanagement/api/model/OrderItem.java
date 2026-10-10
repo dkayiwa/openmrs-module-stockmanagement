@@ -3,7 +3,7 @@ package org.openmrs.module.stockmanagement.api.model;
 import org.openmrs.*;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * The persistent class for the stockmgmt_stock_item database table.
@@ -22,7 +22,7 @@ public class OrderItem extends org.openmrs.BaseChangeableOpenmrsData implements 
 	private Order order;
 	
 	@JoinColumn(name = "stock_item_id")
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	private StockItem stockItem;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -30,11 +30,11 @@ public class OrderItem extends org.openmrs.BaseChangeableOpenmrsData implements 
 	private StockItemPackagingUOM stockItemPackagingUOM;
 	
 	@JoinColumn(name = "created_from")
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Location createdFrom;
 	
 	@JoinColumn(name = "fulfilment_location_id")
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Location fulfilmentLocation;
 	
 	@Override

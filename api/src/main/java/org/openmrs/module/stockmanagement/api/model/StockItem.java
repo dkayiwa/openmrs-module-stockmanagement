@@ -8,7 +8,7 @@ import org.openmrs.Concept;
 import org.openmrs.Drug;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.Set;
 
@@ -31,7 +31,7 @@ public class StockItem extends org.openmrs.BaseChangeableOpenmrsData implements 
 	private Concept concept;
 	
 	@JoinColumn(name = "drug_id")
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Drug drug;
 	
 	@Column(name = "has_expiration")

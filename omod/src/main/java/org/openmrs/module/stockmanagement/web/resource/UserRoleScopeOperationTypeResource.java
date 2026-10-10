@@ -16,7 +16,7 @@ import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOp
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
 
 @SubResource(parent = UserRoleScopeResource.class, path = "operationtypes", supportedClass = UserRoleScopeOperationTypeDTO.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class UserRoleScopeOperationTypeResource extends SubResourceBase<UserRoleScopeOperationTypeDTO, UserRoleScopeDTO, UserRoleScopeResource> {
 	
 	@Override

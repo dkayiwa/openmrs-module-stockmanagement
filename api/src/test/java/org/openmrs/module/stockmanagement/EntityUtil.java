@@ -1,7 +1,7 @@
 package org.openmrs.module.stockmanagement;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.openmrs.*;
 
 import java.lang.reflect.Field;

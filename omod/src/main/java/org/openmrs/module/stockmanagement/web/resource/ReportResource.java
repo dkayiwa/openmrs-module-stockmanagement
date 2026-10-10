@@ -23,7 +23,7 @@ import org.openmrs.module.webservices.rest.web.response.ResponseException;
 import java.util.Optional;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/report", supportedClass = Report.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class ReportResource extends ResourceBase<Report> {
 	
 	@Override

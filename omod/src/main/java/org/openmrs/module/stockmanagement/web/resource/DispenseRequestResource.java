@@ -3,7 +3,7 @@ package org.openmrs.module.stockmanagement.web.resource;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.StringProperty;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Encounter;
 import org.openmrs.Order;
 import org.openmrs.Patient;
@@ -29,7 +29,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/dispenserequest", supportedClass = DispenseRequest.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*"})
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*"})
 public class DispenseRequestResource extends ResourceBase<DispenseRequest> {
 
     @Override

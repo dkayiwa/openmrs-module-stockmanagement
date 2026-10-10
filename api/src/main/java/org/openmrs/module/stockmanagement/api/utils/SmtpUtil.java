@@ -3,11 +3,11 @@ package org.openmrs.module.stockmanagement.api.utils;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 
-import javax.activation.DataHandler;
-import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.util.ByteArrayDataSource;
+import jakarta.activation.DataHandler;
+import jakarta.mail.*;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -19,8 +19,8 @@ public class SmtpUtil {
 		Authenticator authenticator = null;
 		String password = smtpProperties.getProperty("mail.smtp.user.password");
 		String username = smtpProperties.getProperty("mail.smtp.user");
-		if (org.apache.commons.lang.StringUtils.isNotBlank(username)
-		        && org.apache.commons.lang.StringUtils.isNotBlank(password)) {
+		if (org.apache.commons.lang3.StringUtils.isNotBlank(username)
+		        && org.apache.commons.lang3.StringUtils.isNotBlank(password)) {
 			authenticator = new Authenticator() {
 				
 				@Override
@@ -38,9 +38,9 @@ public class SmtpUtil {
 		Properties smtpProperties = System.getProperties();
 		if (smtpProperties.get(smptHostProperty) == null) {
 			String propertyValue = Context.getAdministrationService().getGlobalProperty(smptHostProperty);
-			if (org.apache.commons.lang.StringUtils.isBlank(propertyValue)) {
+			if (org.apache.commons.lang3.StringUtils.isBlank(propertyValue)) {
 				propertyValue = Context.getAdministrationService().getGlobalProperty("mail.smtp_host");
-				return org.apache.commons.lang.StringUtils.isNotBlank(propertyValue);
+				return org.apache.commons.lang3.StringUtils.isNotBlank(propertyValue);
 			}
 		}
 		return true;
@@ -117,13 +117,13 @@ public class SmtpUtil {
 	        String propertyName, String altSourcePropertyName) {
 		if (property.get(propertyName) == null) {
 			String propertyValue = administrationService.getGlobalProperty(propertyName);
-			if (!org.apache.commons.lang.StringUtils.isBlank(propertyValue)) {
+			if (!org.apache.commons.lang3.StringUtils.isBlank(propertyValue)) {
 				property.setProperty(propertyName, propertyValue);
 			} else {
 				if (altSourcePropertyName != null) {
 					propertyValue = administrationService.getGlobalProperty(altSourcePropertyName);
 				}
-				if (!org.apache.commons.lang.StringUtils.isBlank(propertyValue)) {
+				if (!org.apache.commons.lang3.StringUtils.isBlank(propertyValue)) {
 					property.setProperty(propertyName, propertyValue);
 				} else if (defaultValue != null) {
 					property.setProperty(propertyName, defaultValue);
@@ -149,7 +149,7 @@ public class SmtpUtil {
 		for (int i = 0; i < emailAddresses.length; i++) {
 			addresses[i] = InternetAddress.parse(emailAddresses[i], false)[0];
 		}
-		mimeMessage.setRecipients(javax.mail.Message.RecipientType.TO, addresses);
+		mimeMessage.setRecipients(jakarta.mail.Message.RecipientType.TO, addresses);
 		mimeMessage.setSubject(subject);
 		mimeMessage.setHeader("Content-Transfer-Encoding", "base64");
 		mimeMessage.setDataHandler(new DataHandler(new ByteArrayDataSource(body, "text/html")));

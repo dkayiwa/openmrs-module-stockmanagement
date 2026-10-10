@@ -1,9 +1,11 @@
 package org.openmrs.module.stockmanagement.api.model;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.openmrs.*;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 import java.util.Set;
 
@@ -100,6 +102,7 @@ public class StockOperation extends BaseChangeableOpenmrsData implements Seriali
 	
 	@Column(name = "status", length = 50)
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.VARCHAR)
 	private StockOperationStatus status;
 	
 	@Column(name = "return_reason", length = 500)

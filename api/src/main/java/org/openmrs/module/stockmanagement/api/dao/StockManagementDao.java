@@ -9,17 +9,17 @@
  */
 package org.openmrs.module.stockmanagement.api.dao;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import jakarta.persistence.TemporalType;
 import org.hibernate.*;
-import org.hibernate.criterion.*;
-import org.hibernate.criterion.Order;
+import org.hibernate.query.Query;
 import org.hibernate.transform.AliasToBeanResultTransformer;
-import org.hibernate.type.IntegerType;
+import org.hibernate.type.StandardBasicTypes;
 import org.openmrs.*;
 import org.openmrs.api.ConceptNameType;
 import org.openmrs.api.context.Context;
-import org.openmrs.api.db.hibernate.DbSession;
+import org.openmrs.api.db.hibernate.HibernateUtil;
 import org.openmrs.module.stockmanagement.api.dto.*;
 import org.openmrs.module.stockmanagement.api.dto.reporting.*;
 import org.openmrs.module.stockmanagement.api.model.*;
@@ -36,13 +36,12 @@ import java.util.stream.Collectors;
 public class StockManagementDao extends DaoBase {
 	
 	public List<LocationTree> getCompleteLocationTree() {
-		Criteria criteria = getSession().createCriteria(LocationTree.class);
-		return criteria.list();
+		return getSession().createQuery("from stockmanagement.LocationTree").list();
 	}
 	
 	public void deleteLocation(Integer locationId) {
 		
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session.createQuery("DELETE FROM Location WHERE locationId = :p");
 		query.setParameter("p", locationId);
 		query.executeUpdate();
@@ -50,7 +49,7 @@ public class StockManagementDao extends DaoBase {
 	
 	public void deleteLocationAttributes(List<Integer> locationAttributeIds) {
 		
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session.createQuery("DELETE FROM LocationAttribute WHERE locationAttributeId in (:p)");
 		query.setParameterList("p", locationAttributeIds);
 		query.executeUpdate();
@@ -58,7 +57,7 @@ public class StockManagementDao extends DaoBase {
 	
 	public void deleteLocationTreeNodes(Integer locationId) {
 		
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
 		        .createQuery("DELETE FROM stockmanagement.LocationTree WHERE parentLocationId = :p or childLocationId = :p");
 		query.setParameter("p", locationId);
@@ -67,173 +66,161 @@ public class StockManagementDao extends DaoBase {
 	
 	public void deleteLocationTreeNodes(List<LocationTree> nodes) {
 
-        DbSession session = getSession();
+        Session session = getSession();
         Query query = session.createQuery("DELETE FROM stockmanagement.LocationTree l WHERE l.id in (:p)");
         query.setParameterList("p", nodes.stream().map(p -> p.getId()).collect(Collectors.toList()));
         query.executeUpdate();
     }
 	
 	public void saveLocationTreeNodes(List<LocationTree> nodes) {
-		DbSession session = getSession();
+		Session session = getSession();
 		for (LocationTree locationTree : nodes) {
-			session.save(locationTree);
+			session.persist(locationTree);
 		}
 	}
 	
 	public List<LocationTree> getCompleteLocationTree(Integer atLocationId) {
-		Criteria criteria = getSession().createCriteria(LocationTree.class);
-		criteria.add(Restrictions.eq("parentLocationId", atLocationId));
-		return criteria.list();
+		return getSession().createQuery("from stockmanagement.LocationTree where parentLocationId = :parentLocationId")
+		        .setParameter("parentLocationId", atLocationId).list();
 	}
 	
 	public UserRoleScopeLocation getUserRoleScopeLocationByUuid(String uuid) {
-		return (UserRoleScopeLocation) getSession().createCriteria(UserRoleScopeLocation.class)
-		        .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (UserRoleScopeLocation) getSession().createQuery("from stockmanagement.UserRoleScopeLocation where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public UserRoleScopeLocation saveUserRoleScopeLocation(UserRoleScopeLocation userRoleScopeLocation) {
-		getSession().saveOrUpdate(userRoleScopeLocation);
-		return userRoleScopeLocation;
+		return HibernateUtil.saveOrUpdate(getSession(), userRoleScopeLocation);
 	}
 	
 	public StockItemTransaction getStockItemTransactionByUuid(String uuid) {
-		return (StockItemTransaction) getSession().createCriteria(StockItemTransaction.class)
-		        .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (StockItemTransaction) getSession().createQuery("from stockmanagement.StockItemTransaction where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public StockItemTransaction saveStockItemTransaction(StockItemTransaction stockItemTransaction) {
-		getSession().saveOrUpdate(stockItemTransaction);
-		return stockItemTransaction;
+		return HibernateUtil.saveOrUpdate(getSession(), stockItemTransaction);
 	}
 	
 	public StockRule getStockRuleByUuid(String uuid) {
-		return (StockRule) getSession().createCriteria(StockRule.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (StockRule) getSession().createQuery("from stockmanagement.StockRule where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public StockRule saveStockRule(StockRule stockRule) {
-		getSession().saveOrUpdate(stockRule);
-		return stockRule;
+		return HibernateUtil.saveOrUpdate(getSession(), stockRule);
 	}
 	
 	public StockOperation getStockOperationByUuid(String uuid) {
-		return (StockOperation) getSession().createCriteria(StockOperation.class).add(Restrictions.eq("uuid", uuid))
+		return (StockOperation) getSession().createQuery("from stockmanagement.StockOperation where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public StockOperation saveStockOperation(StockOperation stockOperation) {
-		getSession().saveOrUpdate(stockOperation);
-		return stockOperation;
+		return HibernateUtil.saveOrUpdate(getSession(), stockOperation);
 	}
 	
 	public StockItemPackagingUOM getStockItemPackagingUOMByUuid(String uuid) {
-		return (StockItemPackagingUOM) getSession().createCriteria(StockItemPackagingUOM.class)
-		        .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (StockItemPackagingUOM) getSession().createQuery("from stockmanagement.StockItemPackagingUOM where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public StockItemPackagingUOM saveStockItemPackagingUOM(StockItemPackagingUOM stockItemPackagingUOM) {
-		getSession().saveOrUpdate(stockItemPackagingUOM);
-		return stockItemPackagingUOM;
+		return HibernateUtil.saveOrUpdate(getSession(), stockItemPackagingUOM);
 	}
 	
 	public UserRoleScopeOperationType getUserRoleScopeOperationTypeByUuid(String uuid) {
-		return (UserRoleScopeOperationType) getSession().createCriteria(UserRoleScopeOperationType.class)
-		        .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (UserRoleScopeOperationType) getSession().createQuery("from stockmanagement.UserRoleScopeOperationType where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public UserRoleScopeOperationType saveUserRoleScopeOperationType(UserRoleScopeOperationType userRoleScopeOperationType) {
-		getSession().saveOrUpdate(userRoleScopeOperationType);
-		return userRoleScopeOperationType;
+		return HibernateUtil.saveOrUpdate(getSession(), userRoleScopeOperationType);
 	}
 	
 	public UserRoleScope getUserRoleScopeByUuid(String uuid) {
-		return (UserRoleScope) getSession().createCriteria(UserRoleScope.class).add(Restrictions.eq("uuid", uuid))
+		return (UserRoleScope) getSession().createQuery("from stockmanagement.UserRoleScope where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public UserRoleScope saveUserRoleScope(UserRoleScope userRoleScope) {
-		getSession().saveOrUpdate(userRoleScope);
-		return userRoleScope;
+		return HibernateUtil.saveOrUpdate(getSession(), userRoleScope);
 	}
 	
 	public StockOperationItem getStockOperationItemByUuid(String uuid) {
-		return (StockOperationItem) getSession().createCriteria(StockOperationItem.class).add(Restrictions.eq("uuid", uuid))
+		return (StockOperationItem) getSession().createQuery("from stockmanagement.StockOperationItem where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public List<StockOperationItem> getStockOperationItemsByStockOperation(Integer stockOperationId) {
-		return getSession().createCriteria(StockOperationItem.class)
-		        .add(Restrictions.eq("stockOperation.id", stockOperationId)).add(Restrictions.eq("voided", false)).list();
+		return getSession()
+		        .createQuery("from stockmanagement.StockOperationItem where stockOperation.id = :stockOperationId and voided = false")
+		        .setParameter("stockOperationId", stockOperationId).list();
 	}
 	
 	public StockOperationItem saveStockOperationItem(StockOperationItem stockOperationItem) {
-		getSession().saveOrUpdate(stockOperationItem);
-		return stockOperationItem;
+		return HibernateUtil.saveOrUpdate(getSession(), stockOperationItem);
 	}
 	
 	public LocationTree getLocationTreeByUuid(String uuid) {
-		return (LocationTree) getSession().createCriteria(LocationTree.class).add(Restrictions.eq("uuid", uuid))
+		return (LocationTree) getSession().createQuery("from stockmanagement.LocationTree where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public LocationTree saveLocationTree(LocationTree locationTree) {
-		getSession().saveOrUpdate(locationTree);
-		return locationTree;
+		return HibernateUtil.saveOrUpdate(getSession(), locationTree);
 	}
 	
 	public StockBatch getStockBatchByUuid(String uuid) {
-		return (StockBatch) getSession().createCriteria(StockBatch.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (StockBatch) getSession().createQuery("from stockmanagement.StockBatch where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public StockBatch saveStockBatch(StockBatch stockBatch) {
-		getSession().saveOrUpdate(stockBatch);
-		return stockBatch;
+		return HibernateUtil.saveOrUpdate(getSession(), stockBatch);
 	}
 	
 	public StockItem getStockItemByUuid(String uuid) {
-		return (StockItem) getSession().createCriteria(StockItem.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (StockItem) getSession().createQuery("from stockmanagement.StockItem where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public List<StockItem> getStockItemsByUuids(List<String> uuids) {
         if (uuids.isEmpty()) return new ArrayList<>();
-        return getSession().createCriteria(StockItem.class).add(Restrictions.in("uuid", uuids)).add(Restrictions.eq("voided", false)).list();
+        return getSession().createQuery("from stockmanagement.StockItem where uuid in (:uuids) and voided = false").setParameterList("uuids", uuids).list();
     }
 	
 	public StockItem saveStockItem(StockItem stockItem) {
-		getSession().saveOrUpdate(stockItem);
-		return stockItem;
+		return HibernateUtil.saveOrUpdate(getSession(), stockItem);
 	}
 	
 	public StockOperationType getStockOperationTypeByUuid(String uuid) {
-		return (StockOperationType) getSession().createCriteria(StockOperationType.class).add(Restrictions.eq("uuid", uuid))
+		return (StockOperationType) getSession().createQuery("from stockmanagement.StockOperationType where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public StockOperationType getStockOperationTypeByType(String type) {
-		return (StockOperationType) getSession().createCriteria(StockOperationType.class)
-		        .add(Restrictions.eq("operationType", type)).uniqueResult();
+		return (StockOperationType) getSession().createQuery("from stockmanagement.StockOperationType where operationType = :operationType").setParameter("operationType", type)
+		        .uniqueResult();
 	}
 	
 	public List<StockOperationType> getAllStockOperationTypes(boolean includeVoid) {
-		Criteria criteria = getSession().createCriteria(StockOperationType.class);
-		if (!includeVoid)
-			criteria.add(Restrictions.eq("voided", false));
-		return criteria.list();
+		return getSession().createQuery("from stockmanagement.StockOperationType" + (includeVoid ? "" : " where voided = false"))
+		        .list();
 	}
 	
 	public StockOperationType saveStockOperationType(StockOperationType stockOperationType) {
-		getSession().saveOrUpdate(stockOperationType);
-		return stockOperationType;
+		return HibernateUtil.saveOrUpdate(getSession(), stockOperationType);
 	}
 	
 	public StockOperationTypeLocationScope getStockOperationTypeLocationScopeByUuid(String uuid) {
-		return (StockOperationTypeLocationScope) getSession().createCriteria(StockOperationTypeLocationScope.class)
-		        .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (StockOperationTypeLocationScope) getSession().createQuery("from stockmanagement.StockOperationTypeLocationScope where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public StockOperationTypeLocationScope saveStockOperationTypeLocationScope(
 	        StockOperationTypeLocationScope stockOperationTypeLocationScope) {
-		getSession().saveOrUpdate(stockOperationTypeLocationScope);
-		return stockOperationTypeLocationScope;
+		return HibernateUtil.saveOrUpdate(getSession(), stockOperationTypeLocationScope);
 	}
 	
 	private boolean isNotNullOrEmpty(String value) {
@@ -241,29 +228,40 @@ public class StockManagementDao extends DaoBase {
 	}
 	
 	public Result<UserRoleScope> findUserRoleScopes(UserRoleScopeSearchFilter filter) {
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(UserRoleScope.class, "urs");
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select urs from stockmanagement.UserRoleScope urs");
+        StringBuilder hqlFilter = new StringBuilder();
         if (isNotNullOrEmpty(filter.getUuid())) {
-            criteria.add(Restrictions.eq("urs.uuid", filter.getUuid()));
+            appendFilter(hqlFilter, "urs.uuid = :uuid");
+            parameterList.put("uuid", filter.getUuid());
         }
 
         if (!filter.getIncludeVoided()) {
-            criteria.add(Restrictions.eq("urs.voided", false));
+            appendFilter(hqlFilter, "urs.voided = false");
         }
 
         if (filter.getUsers() != null && !filter.getUsers().isEmpty()) {
-            criteria.add(Restrictions.in("urs.user", filter.getUsers()));
+            appendFilter(hqlFilter, "urs.user in (:users)");
+            parameterWithList.put("users", filter.getUsers());
         }
 
         if (filter.getLocation() != null) {
 
-            criteria.createAlias("urs.userRoleScopeLocations", "ursl");
-            criteria.add(Restrictions.eq("ursl.location", filter.getLocation()));
+            hqlQuery.append(" join urs.userRoleScopeLocations ursl");
+            appendFilter(hqlFilter, "ursl.location = :location");
+            parameterList.put("location", filter.getLocation());
         }
 
         if (filter.getOperationType() != null) {
-            criteria.createAlias("urs.userRoleScopeOperationTypes", "ursot");
-            criteria.add(Restrictions.eq("ursot.stockOperationType", filter.getOperationType()));
+            hqlQuery.append(" join urs.userRoleScopeOperationTypes ursot");
+            appendFilter(hqlFilter, "ursot.stockOperationType = :operationType");
+            parameterList.put("operationType", filter.getOperationType());
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
         }
 
         Result<UserRoleScope> result = new Result<>();
@@ -271,22 +269,32 @@ public class StockManagementDao extends DaoBase {
             result.setPageIndex(filter.getStartIndex());
             result.setPageSize(filter.getLimit());
         }
-        result.setData(executeCriteria(criteria, result, Order.desc("urs.dateCreated")));
+        result.setData(executeQuery(null, hqlQuery, result, " order by urs.dateCreated desc", parameterList, parameterWithList));
         return result;
     }
 	
 	public Result<UserRoleScopeLocation> findUserRoleScopeLocations(UserRoleScopeLocationSearchFilter filter) {
-        Criteria criteria = getSession().createCriteria(UserRoleScopeLocation.class);
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select ursl from stockmanagement.UserRoleScopeLocation ursl");
+        StringBuilder hqlFilter = new StringBuilder();
         if (isNotNullOrEmpty(filter.getUuid())) {
-            criteria.add(Restrictions.eq("uuid", filter.getUuid()));
+            appendFilter(hqlFilter, "ursl.uuid = :uuid");
+            parameterList.put("uuid", filter.getUuid());
         }
 
         if (!filter.getIncludeVoided()) {
-            criteria.add(Restrictions.eq("voided", false));
+            appendFilter(hqlFilter, "ursl.voided = false");
         }
 
         if (filter.getUserRoleScopes() != null && !filter.getUserRoleScopes().isEmpty()) {
-            criteria.add(Restrictions.in("userRoleScope", filter.getUserRoleScopes()));
+            appendFilter(hqlFilter, "ursl.userRoleScope in (:userRoleScopes)");
+            parameterWithList.put("userRoleScopes", filter.getUserRoleScopes());
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
         }
 
         Result<UserRoleScopeLocation> result = new Result<>();
@@ -294,22 +302,32 @@ public class StockManagementDao extends DaoBase {
             result.setPageIndex(filter.getStartIndex());
             result.setPageSize(filter.getLimit());
         }
-        result.setData(executeCriteria(criteria, result, Order.desc("dateCreated")));
+        result.setData(executeQuery(null, hqlQuery, result, " order by ursl.dateCreated desc", parameterList, parameterWithList));
         return result;
     }
 	
 	public Result<UserRoleScopeOperationType> findUserRoleScopeOperationTypeFilters(UserRoleScopeOperationTypeSearchFilter filter) {
-        Criteria criteria = getSession().createCriteria(UserRoleScopeOperationType.class);
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select ursot from stockmanagement.UserRoleScopeOperationType ursot");
+        StringBuilder hqlFilter = new StringBuilder();
         if (isNotNullOrEmpty(filter.getUuid())) {
-            criteria.add(Restrictions.eq("uuid", filter.getUuid()));
+            appendFilter(hqlFilter, "ursot.uuid = :uuid");
+            parameterList.put("uuid", filter.getUuid());
         }
 
         if (!filter.getIncludeVoided()) {
-            criteria.add(Restrictions.eq("voided", false));
+            appendFilter(hqlFilter, "ursot.voided = false");
         }
 
         if (filter.getUserRoleScopes() != null && !filter.getUserRoleScopes().isEmpty()) {
-            criteria.add(Restrictions.in("userRoleScope", filter.getUserRoleScopes()));
+            appendFilter(hqlFilter, "ursot.userRoleScope in (:userRoleScopes)");
+            parameterWithList.put("userRoleScopes", filter.getUserRoleScopes());
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
         }
 
         Result<UserRoleScopeOperationType> result = new Result<>();
@@ -317,48 +335,48 @@ public class StockManagementDao extends DaoBase {
             result.setPageIndex(filter.getStartIndex());
             result.setPageSize(filter.getLimit());
         }
-        result.setData(executeCriteria(criteria, result, Order.desc("dateCreated")));
+        result.setData(executeQuery(null, hqlQuery, result, " order by ursot.dateCreated desc", parameterList, parameterWithList));
         return result;
     }
 	
 	public List<StockOperationType> getAllStockOperationTypes() {
-		return getSession().createCriteria(StockOperationType.class).list();
+		return getSession().createQuery("from stockmanagement.StockOperationType").list();
 	}
 	
 	public List<StockOperationTypeLocationScope> getAllStockOperationTypeLocationScopes() {
-		return getSession().createCriteria(StockOperationTypeLocationScope.class).list();
+		return getSession().createQuery("from stockmanagement.StockOperationTypeLocationScope").list();
 	}
 	
 	public void voidUserRoleScopes(List<String> userRoleScopeIds, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.UserRoleScope SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
+		        .createQuery("UPDATE stockmanagement.UserRoleScope SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
 		query.setParameterList("uuidList", userRoleScopeIds);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
 	public void voidUserRoleScopeLocations(List<String> userRoleScopeLocationIds, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.UserRoleScopeLocation SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
+		        .createQuery("UPDATE stockmanagement.UserRoleScopeLocation SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
 		query.setParameterList("uuidList", userRoleScopeLocationIds);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
 	public void voidUserRoleScopeOperationTypes(List<String> userRoleScopeOperationTypeIds, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.UserRoleScopeOperationType SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
+		        .createQuery("UPDATE stockmanagement.UserRoleScopeOperationType SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
 		query.setParameterList("uuidList", userRoleScopeOperationTypeIds);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
@@ -577,38 +595,50 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public Result<StockItem> findStockItemEntities(StockItemSearchFilter filter) {
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(StockItem.class, "si");
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select si from stockmanagement.StockItem si");
+        StringBuilder hqlFilter = new StringBuilder();
         if (isNotNullOrEmpty(filter.getUuid())) {
-            criteria.add(Restrictions.eq("si.uuid", filter.getUuid()));
+            appendFilter(hqlFilter, "si.uuid = :uuid");
+            parameterList.put("uuid", filter.getUuid());
         }
 
         if (filter.getIsDrug() != null) {
             if (filter.getIsDrug()) {
-                criteria.add(Restrictions.isNotNull("si.drug"));
+                appendFilter(hqlFilter, "si.drug is not null");
             } else {
-                criteria.add(Restrictions.isNull("si.drug"));
+                appendFilter(hqlFilter, "si.drug is null");
             }
         }
 
         if (!filter.getIncludeVoided()) {
-            criteria.add(Restrictions.eq("si.voided", false));
+            appendFilter(hqlFilter, "si.voided = false");
         }
 
         boolean appledDrugConceptsSearch = false;
         if (filter.getSearchEitherDrugsOrConcepts()) {
             if (filter.getDrugs() != null && !filter.getDrugs().isEmpty() && filter.getConcepts() != null && !filter.getConcepts().isEmpty()) {
                 appledDrugConceptsSearch = true;
-                criteria.add(Restrictions.or(Restrictions.in("si.drug", filter.getDrugs()), Restrictions.in("si.concept", filter.getConcepts())));
+                appendFilter(hqlFilter, "si.drug in (:drugs) or si.concept in (:concepts)");
+                parameterWithList.put("drugs", filter.getDrugs());
+                parameterWithList.put("concepts", filter.getConcepts());
             }
         }
         if (!appledDrugConceptsSearch) {
             if (filter.getDrugs() != null && !filter.getDrugs().isEmpty()) {
-                criteria.add(Restrictions.in("si.drug", filter.getDrugs()));
+                appendFilter(hqlFilter, "si.drug in (:drugs)");
+                parameterWithList.put("drugs", filter.getDrugs());
             }
             if (filter.getConcepts() != null && !filter.getConcepts().isEmpty()) {
-                criteria.add(Restrictions.in("si.concept", filter.getConcepts()));
+                appendFilter(hqlFilter, "si.concept in (:concepts)");
+                parameterWithList.put("concepts", filter.getConcepts());
             }
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
         }
 
         Result<StockItem> result = new Result<>();
@@ -616,7 +646,7 @@ public class StockManagementDao extends DaoBase {
             result.setPageIndex(filter.getStartIndex());
             result.setPageSize(filter.getLimit());
         }
-        result.setData(executeCriteria(criteria, result));
+        result.setData(executeQuery(null, hqlQuery, result, null, parameterList, parameterWithList));
 
         return result;
     }
@@ -810,7 +840,7 @@ public class StockManagementDao extends DaoBase {
         }
 
         if (filter.getStockItemId() != null) {
-            appendFilter(hqlFilter, " exists ( from stockmanagement.StockOperationItem soi where soi.stockOperation.id = so.id and soi.stockItem.id = :soiid and soi.voided = 0 )");
+            appendFilter(hqlFilter, " exists ( from stockmanagement.StockOperationItem soi where soi.stockOperation.id = so.id and soi.stockItem.id = :soiid and soi.voided = false )");
             parameterList.putIfAbsent("soiid", filter.getStockItemId());
         }
 
@@ -978,7 +1008,7 @@ public class StockManagementDao extends DaoBase {
 	
 	private List<UserPersonNameDTO> getPatientNameByPatientIds(List<Integer> ids, boolean includePatientIdentifier) {
         if (ids == null || ids.isEmpty()) return new ArrayList<>();
-        Query query = sessionFactory.getCurrentSession().createSQLQuery("select p.uuid as uuid, up.person_id as patientId, p.given_name as givenName, p.middle_name as middleName, p.family_name as familyName " +
+        Query query = getSession().createNativeQuery("select p.uuid as uuid, up.person_id as patientId, p.given_name as givenName, p.middle_name as middleName, p.family_name as familyName " +
                         (includePatientIdentifier ? ",(select pi.identifier from patient_identifier pi where pi.patient_id = up.person_id order by pi.preferred desc, pi.patient_identifier_id asc limit 1) as patientIdentifier" : "") +
                         " from person up join person_name p on up.person_id = p.person_id where up.person_id in (:ids)")
                 .setParameterList("ids", ids);
@@ -988,35 +1018,37 @@ public class StockManagementDao extends DaoBase {
 	
 	public List<UserPersonNameDTO> getPersonNameByUserIds(List<Integer> ids) {
         if (ids == null || ids.isEmpty()) return new ArrayList<>();
-        Query query = sessionFactory.getCurrentSession().createQuery("select u.uuid as uuid, u.userId as userId, p.givenName as givenName, p.middleName as middleName, p.familyName as familyName from User u join u.person up join up.names p where u.userId in (:ids)")
+        Query query = getSession().createQuery("select u.uuid as uuid, u.userId as userId, p.givenName as givenName, p.middleName as middleName, p.familyName as familyName from User u join u.person up join up.names p where u.userId in (:ids)")
                 .setParameterList("ids", ids);
         query = query.setResultTransformer(new AliasToBeanResultTransformer(UserPersonNameDTO.class));
         return query.list();
     }
 	
 	public StockSource getStockSourceByUuid(String uuid) {
-		return (StockSource) getSession().createCriteria(StockSource.class).add(Restrictions.eq("uuid", uuid))
+		return (StockSource) getSession().createQuery("from stockmanagement.StockSource where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public StockSource saveStockSource(StockSource stockSource) {
-		getSession().saveOrUpdate(stockSource);
-		return stockSource;
+		return HibernateUtil.saveOrUpdate(getSession(), stockSource);
 	}
 	
 	public Result<StockSource> findStockSources(StockSourceSearchFilter filter) {
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(StockSource.class, "ss");
+        HashMap<String, Object> parameterList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select ss from stockmanagement.StockSource ss");
+        StringBuilder hqlFilter = new StringBuilder();
         if (isNotNullOrEmpty(filter.getUuid())) {
-            criteria.add(Restrictions.eq("ss.uuid", filter.getUuid()));
+            appendFilter(hqlFilter, "ss.uuid = :uuid");
+            parameterList.put("uuid", filter.getUuid());
         }
 
         if (filter.getSourceType() != null) {
-            criteria.add(Restrictions.eq("ss.sourceType", filter.getSourceType()));
+            appendFilter(hqlFilter, "ss.sourceType = :sourceType");
+            parameterList.put("sourceType", filter.getSourceType());
         }
 
         if (!filter.getIncludeVoided()) {
-            criteria.add(Restrictions.eq("ss.voided", false));
+            appendFilter(hqlFilter, "ss.voided = false");
         }
 
         if (StringUtils.isNotBlank(filter.getTextSearch())) {
@@ -1024,7 +1056,13 @@ public class StockManagementDao extends DaoBase {
             if (textSearch.length() == 0)
                 return new Result<>(new ArrayList<>(), 0);
             textSearch = textSearch + "%";
-            criteria.add(Restrictions.or(Restrictions.ilike("ss.name", textSearch), Restrictions.ilike("ss.acronym", textSearch)));
+            appendFilter(hqlFilter, "lower(ss.name) like lower(:textSearch) or lower(ss.acronym) like lower(:textSearch)");
+            parameterList.put("textSearch", textSearch);
+        }
+
+        if (hqlFilter.length() > 0) {
+            hqlQuery.append(" where ");
+            hqlQuery.append(hqlFilter);
         }
 
         Result<StockSource> result = new Result<>();
@@ -1032,62 +1070,63 @@ public class StockManagementDao extends DaoBase {
             result.setPageIndex(filter.getStartIndex());
             result.setPageSize(filter.getLimit());
         }
-        result.setData(executeCriteria(criteria, result));
+        result.setData(executeQuery(null, hqlQuery, result, null, parameterList, null));
 
         return result;
     }
 	
 	public void voidStockItemPackagingUOM(String uuid, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.StockItemPackagingUOM SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid = :uuid");
+		        .createQuery("UPDATE stockmanagement.StockItemPackagingUOM SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid = :uuid");
 		query.setParameter("uuid", uuid);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
 	public void voidStockItemReference(String uuid, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.StockItemReference SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid = :uuid");
+		        .createQuery("UPDATE stockmanagement.StockItemReference SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid = :uuid");
 		query.setParameter("uuid", uuid);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
 	public void voidStockSources(List<String> stockSourceIds, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.StockSource SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
+		        .createQuery("UPDATE stockmanagement.StockSource SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
 		query.setParameterList("uuidList", stockSourceIds);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
 	public Party getPartyByUuid(String uuid) {
-		return (Party) getSession().createCriteria(Party.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (Party) getSession().createQuery("from stockmanagement.Party where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public Party getPartyById(Integer id) {
-		return (Party) getSession().createCriteria(Party.class).add(Restrictions.eq("id", id)).uniqueResult();
+		return (Party) getSession().createQuery("from stockmanagement.Party where id = :id").setParameter("id", id)
+		        .uniqueResult();
 	}
 	
 	public Party getPartyByStockSource(StockSource stockSource) {
 		if (stockSource == null)
 			return null;
-		Criteria criteria = getSession().createCriteria(Party.class);
-		criteria.add(Restrictions.eq("stockSource", stockSource));
-		return (Party) criteria.uniqueResult();
+		return (Party) getSession().createQuery("from stockmanagement.Party where stockSource = :stockSource")
+		        .setParameter("stockSource", stockSource).uniqueResult();
 	}
 	
 	public void deleteParty(Party party) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session.createQuery("DELETE stockmanagement.Party WHERE id = :id");
 		query.setParameter("id", party.getId());
 		query.executeUpdate();
@@ -1096,43 +1135,41 @@ public class StockManagementDao extends DaoBase {
 	public Party getPartyByLocation(Location location) {
 		if (location == null)
 			return null;
-		Criteria criteria = getSession().createCriteria(Party.class);
-		criteria.add(Restrictions.eq("location", location));
-		return (Party) criteria.uniqueResult();
+		return (Party) getSession().createQuery("from stockmanagement.Party where location = :location")
+		        .setParameter("location", location).uniqueResult();
 	}
 	
 	public List<Party> getPartyListByLocations(Collection<Location> locations) {
         if (locations == null || locations.isEmpty())
             return new ArrayList<>();
-        Criteria criteria = getSession().createCriteria(Party.class);
-        criteria.add(Restrictions.in("location", locations));
-        return criteria.list();
+        return getSession().createQuery("from stockmanagement.Party where location in (:locations)")
+                .setParameterList("locations", locations).list();
     }
 	
 	public Party saveParty(Party party) {
-		getSession().saveOrUpdate(party);
-		return party;
+		return HibernateUtil.saveOrUpdate(getSession(), party);
 	}
 	
 	public List<Party> findParty(Boolean hasLocation, Boolean hasStockSource) {
-		Criteria criteria = getSession().createCriteria(Party.class);
+		StringBuilder hqlFilter = new StringBuilder();
 		if (hasLocation != null) {
 			if (hasLocation.booleanValue()) {
-				criteria.add(Restrictions.isNotNull("location"));
+				appendFilter(hqlFilter, "p.location is not null");
 			} else {
-				criteria.add(Restrictions.isNull("location"));
+				appendFilter(hqlFilter, "p.location is null");
 			}
 		}
 		
 		if (hasStockSource != null) {
 			if (hasStockSource.booleanValue()) {
-				criteria.add(Restrictions.isNotNull("stockSource"));
+				appendFilter(hqlFilter, "p.stockSource is not null");
 			} else {
-				criteria.add(Restrictions.isNull("stockSource"));
+				appendFilter(hqlFilter, "p.stockSource is null");
 			}
 		}
 		
-		return criteria.list();
+		return getSession().createQuery(
+		    "select p from stockmanagement.Party p" + (hqlFilter.length() > 0 ? " where " + hqlFilter : "")).list();
 	}
 	
 	public List<Integer> getActiveUsersAssignedForScope(Integer locationId, List<String> roles) {
@@ -1143,10 +1180,10 @@ public class StockManagementDao extends DaoBase {
                 " urs.userRoleScopeLocations ursl join urs.user u, \n" +
                 " stockmanagement.LocationTree lt, \n" +
                 " Location l \n" +
-                "WHERE urs.role.role in (:roles) AND ursl.enableDescendants = 1 AND ursl.location.id = lt.parentLocationId AND lt.childLocationId = l.id AND " +
-                "lt.childLocationId=:locid AND urs.enabled = 1 AND urs.voided = 0 AND " +
-                "(urs.permanent = 1 OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) AND " +
-                "ursl.voided=0 AND u.retired=0 AND l.retired=0 ");
+                "WHERE urs.role.role in (:roles) AND ursl.enableDescendants = true AND ursl.location.id = lt.parentLocationId AND lt.childLocationId = l.id AND " +
+                "lt.childLocationId=:locid AND urs.enabled = true AND urs.voided = false AND " +
+                "(urs.permanent = true OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) AND " +
+                "ursl.voided=false AND u.retired=false AND l.retired=false ");
 
         Query query = getSession().createQuery(hqlQuery.toString());
         query.setParameter("locid", locationId);
@@ -1166,9 +1203,9 @@ public class StockManagementDao extends DaoBase {
                 "FROM stockmanagement.UserRoleScope urs join \n" +
                 "     urs.userRoleScopeLocations ursl join urs.user u join \n" +
                 "     ursl.location l \n" +
-                "WHERE urs.role.role in (:roles) AND l.locationId = :locid AND ursl.enableDescendants = 0 AND urs.enabled = 1 AND urs.voided = 0 AND " +
-                "(urs.permanent = 1 OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) and ursl.voided=0 " +
-                " AND u.retired=0 AND l.retired=0");
+                "WHERE urs.role.role in (:roles) AND l.locationId = :locid AND ursl.enableDescendants = false AND urs.enabled = true AND urs.voided = false AND " +
+                "(urs.permanent = true OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) and ursl.voided=false " +
+                " AND u.retired=false AND l.retired=false");
 
         query = getSession().createQuery(hqlQuery.toString());
         query.setParameter("locid", locationId);
@@ -1197,13 +1234,14 @@ public class StockManagementDao extends DaoBase {
                 "     stockmanagement.LocationTree lt, \n" +
                 "     Location l, \n" +
                 "     stockmanagement.Party p \n" +
-                "WHERE ursl.enableDescendants = 1 AND ursl.location.id = lt.parentLocationId AND lt.childLocationId = l.id AND lt.childLocationId = p.location.id AND urs.user = :user AND urs.role in (:roles) AND urs.enabled = 1 AND urs.voided = 0 AND " +
-                "(urs.permanent = 1 OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) and ursl.voided=0 and ursot.voided=0");
+                "WHERE ursl.enableDescendants = true AND ursl.location.id = lt.parentLocationId AND lt.childLocationId = l.id AND lt.childLocationId = p.location.id AND urs.user = :user AND urs.role in (:roles) AND urs.enabled = true AND urs.voided = false AND " +
+                "(urs.permanent = true OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) and ursl.voided=false and ursot.voided=false");
 
         HashMap<String, Object> parameterList = new HashMap<>();
         if (location != null) {
-            appendFilter(hqlQuery, "ursl.location = :location or lt.childLocationId = :location");
+            appendFilter(hqlQuery, "ursl.location = :location or lt.childLocationId = :locationId");
             parameterList.putIfAbsent("location", location);
+            parameterList.putIfAbsent("locationId", location.getLocationId());
         }
 
         if (stockOperationType != null) {
@@ -1231,8 +1269,8 @@ public class StockManagementDao extends DaoBase {
                 "     ursot.stockOperationType sot, \n" +
                 "     Location l, \n" +
                 "     stockmanagement.Party p \n" +
-                "WHERE ursl.enableDescendants = 0 AND ursl.location.id = l.id AND ursl.location.id = p.location.id AND urs.user = :user AND urs.role in (:roles) AND urs.enabled = 1 AND urs.voided = 0 AND " +
-                "(urs.permanent = 1 OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) and ursl.voided=0 and ursot.voided=0");
+                "WHERE ursl.enableDescendants = false AND ursl.location.id = l.id AND ursl.location.id = p.location.id AND urs.user = :user AND urs.role in (:roles) AND urs.enabled = true AND urs.voided = false AND " +
+                "(urs.permanent = true OR (urs.activeFrom <= :from AND urs.activeTo >= :to )) and ursl.voided=false and ursot.voided=false");
 
         parameterList = new HashMap<>();
         if (location != null) {
@@ -1529,16 +1567,15 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public StockBatch findStockBatch(StockItem stockItem, String batchNo, Date expiration) {
-		Criteria criteria = getSession().createCriteria(StockBatch.class);
-		criteria.add(Restrictions.eq("stockItem", stockItem));
-		criteria.add(Restrictions.eq("batchNo", batchNo).ignoreCase());
-		if (expiration == null) {
-			criteria.add(Restrictions.isNull("expiration"));
-		} else {
-			criteria.add(Restrictions.eq("expiration", expiration));
+		Query query = getSession().createQuery("from stockmanagement.StockBatch where stockItem = :stockItem"
+		        + " and lower(batchNo) = lower(:batchNo) and "
+		        + (expiration == null ? "expiration is null" : "expiration = :expiration") + " and voided = false");
+		query.setParameter("stockItem", stockItem);
+		query.setParameter("batchNo", batchNo);
+		if (expiration != null) {
+			query.setParameter("expiration", expiration);
 		}
-		criteria.add(Restrictions.eq("voided", false));
-		return (StockBatch) criteria.uniqueResult();
+		return (StockBatch) query.uniqueResult();
 	}
 	
 	public List<StockBatchDTO> getExpiringStockBatchesDueForNotification(Integer defaultExpiryNotificationNoticePeriod) {
@@ -1552,7 +1589,7 @@ public class StockManagementDao extends DaoBase {
         StringBuilder hqlQuery = new StringBuilder("SELECT DISTINCT si.expiryNotice as expiryNotice\n" +
                 "from stockmanagement.StockItem si where si.expiryNotice is not null and si.voided  = :vdd");
 
-        DbSession session = getSession();
+        Session session = getSession();
         Query query = session.createQuery(hqlQuery.toString());
         query.setParameter("vdd", false);
         List result = query.list();
@@ -1606,7 +1643,7 @@ public class StockManagementDao extends DaoBase {
                 hqlQuery.append(" where ");
                 hqlQuery.append(hqlFilter);
             }
-            DbSession session = getSession();
+            Session session = getSession();
             Query query = session.createQuery(hqlQuery.toString());
             for (Map.Entry<String, Object> parameter : parameterList.entrySet()) {
                 query.setParameter(parameter.getKey(), parameter.getValue());
@@ -1671,7 +1708,7 @@ public class StockManagementDao extends DaoBase {
         result.setPageIndex(filter.getStartIndex());
         result.setPageSize(filter.getLimit());
 
-        DbSession dbSession = getSession();
+        Session dbSession = getSession();
         hqlQuery.append(" order by sb.id asc");
         Query query = dbSession.createQuery(hqlQuery.toString());
         if (parameterList != null) {
@@ -1754,7 +1791,7 @@ public class StockManagementDao extends DaoBase {
 		                + "\t sb.stockItem si  where sb.expiration >= :today and "
 		                + "sb.expiration <= :dfexp and sb.expiryNotificationDate is null and si.expiryNotice is null and sb.voided = :vdd and si.voided  = :vdd");
 		
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session.createQuery(hqlQuery.toString());
 		query.setParameter("today", DateUtil.today());
 		query.setParameter("dfexp", DateUtils.addDays(DateUtil.today(), defaultExpiryNotificationNoticePeriod));
@@ -1826,51 +1863,41 @@ public class StockManagementDao extends DaoBase {
 	
 	public List<StockItemPackagingUOM> getStockItemPackagingUOMsByUuids(List<String> uuids) {
         if (uuids.isEmpty()) return new ArrayList<>();
-        Criteria criteria = getSession().createCriteria(StockItemPackagingUOM.class);
-        criteria.add(Restrictions.in("uuid", uuids));
-        criteria.add(Restrictions.eq("voided", false));
-        return criteria.list();
+        return getSession().createQuery("from stockmanagement.StockItemPackagingUOM where uuid in (:uuids) and voided = false")
+                .setParameterList("uuids", uuids).list();
     }
 	
 	public StockOperationLink getStockOperationLinkByUuid(String uuid) {
-		return (StockOperationLink) getSession().createCriteria(StockOperationLink.class).add(Restrictions.eq("uuid", uuid))
+		return (StockOperationLink) getSession().createQuery("from stockmanagement.StockOperationLink where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public StockOperationLink saveStockOperationLink(StockOperationLink stockOperationLink) {
-		getSession().saveOrUpdate(stockOperationLink);
-		return stockOperationLink;
+		return HibernateUtil.saveOrUpdate(getSession(), stockOperationLink);
 	}
 	
 	public void voidStockOperationItem(String stockOperationItemId, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.StockOperationItem SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuid)");
+		        .createQuery("UPDATE stockmanagement.StockOperationItem SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuid)");
 		query.setParameter("uuid", stockOperationItemId);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
 	public long getStockOperationItemCount(Integer stockOperationId) {
-		Criteria criteria = getSession().createCriteria(StockOperationItem.class)
-		        .add(Restrictions.eq("stockOperation.id", stockOperationId)).add(Restrictions.eq("voided", false));
-		
-		criteria.setProjection(Projections.rowCount());
-		return ((Number) criteria.uniqueResult()).longValue();
+		Query query = getSession().createQuery(
+		    "select count(*) from stockmanagement.StockOperationItem where stockOperation.id = :stockOperationId and voided = false")
+		        .setParameter("stockOperationId", stockOperationId);
+		return ((Number) query.uniqueResult()).longValue();
 	}
 	
 	public Map<Integer, Integer> getLocationPartyIds(Collection<Integer> locationIds) {
         if (locationIds == null || locationIds.isEmpty()) return new HashMap<>();
-        Criteria criteria = getSession().createCriteria(Party.class).add(Restrictions.in("location.locationId", locationIds));
-        Projection projection1 = Projections.property("location.locationId");
-        Projection projection2 = Projections.property("id");
-        ProjectionList pList = Projections.projectionList();
-        pList.add(projection1);
-        pList.add(projection2);
-        criteria.setProjection(pList);
-        List result = criteria.list();
+        List result = getSession().createQuery("select p.location.locationId, p.id from stockmanagement.Party p where p.location.locationId in (:locationIds)")
+                .setParameterList("locationIds", locationIds).list();
         HashMap<Integer, Integer> ids = new HashMap<>();
         for (Object object : result) {
             Object[] row = (Object[]) object;
@@ -1881,14 +1908,8 @@ public class StockManagementDao extends DaoBase {
 	
 	public Map<String, Integer> getPartyIds(Collection<String> uuids) {
         if (uuids == null || uuids.isEmpty()) return new HashMap<>();
-        Criteria criteria = getSession().createCriteria(Party.class).add(Restrictions.in("uuid", uuids));
-        Projection projection1 = Projections.property("id");
-        Projection projection2 = Projections.property("uuid");
-        ProjectionList pList = Projections.projectionList();
-        pList.add(projection2);
-        pList.add(projection1);
-        criteria.setProjection(pList);
-        List result = criteria.list();
+        List result = getSession().createQuery("select e.uuid, e.id from stockmanagement.Party e where e.uuid in (:uuids)")
+                .setParameterList("uuids", uuids).list();
         HashMap<String, Integer> ids = new HashMap<>();
         for (Object object : result) {
             Object[] row = (Object[]) object;
@@ -1899,14 +1920,8 @@ public class StockManagementDao extends DaoBase {
 	
 	public Map<String, Integer> getStockItemIds(Collection<String> uuids) {
         if (uuids == null || uuids.isEmpty()) return new HashMap<>();
-        Criteria criteria = getSession().createCriteria(StockItem.class).add(Restrictions.in("uuid", uuids));
-        Projection projection1 = Projections.property("id");
-        Projection projection2 = Projections.property("uuid");
-        ProjectionList pList = Projections.projectionList();
-        pList.add(projection2);
-        pList.add(projection1);
-        criteria.setProjection(pList);
-        List result = criteria.list();
+        List result = getSession().createQuery("select e.uuid, e.id from stockmanagement.StockItem e where e.uuid in (:uuids)")
+                .setParameterList("uuids", uuids).list();
         HashMap<String, Integer> ids = new HashMap<>();
         for (Object object : result) {
             Object[] row = (Object[]) object;
@@ -1917,14 +1932,8 @@ public class StockManagementDao extends DaoBase {
 	
 	public Map<String, Integer> getLocationIds(Collection<String> uuids) {
         if (uuids == null || uuids.isEmpty()) return new HashMap<>();
-        Criteria criteria = getSession().createCriteria(Location.class).add(Restrictions.in("uuid", uuids));
-        Projection projection1 = Projections.property("locationId");
-        Projection projection2 = Projections.property("uuid");
-        ProjectionList pList = Projections.projectionList();
-        pList.add(projection2);
-        pList.add(projection1);
-        criteria.setProjection(pList);
-        List result = criteria.list();
+        List result = getSession().createQuery("select e.uuid, e.locationId from Location e where e.uuid in (:uuids)")
+                .setParameterList("uuids", uuids).list();
         HashMap<String, Integer> ids = new HashMap<>();
         for (Object object : result) {
             Object[] row = (Object[]) object;
@@ -1972,7 +1981,7 @@ public class StockManagementDao extends DaoBase {
             hqlFilter.append(" group by lt.parentLocationId, sit.stockItem.id ");
             hqlQuery.append(hqlFilter);
 
-            DbSession session = getSession();
+            Session session = getSession();
             Query query = session.createQuery(hqlQuery.toString());
             for (Map.Entry<String, Object> entry : parameterList.entrySet()) {
                 query.setParameter(entry.getKey(), entry.getValue());
@@ -2032,7 +2041,7 @@ public class StockManagementDao extends DaoBase {
             hqlFilter.append(" group by sit.party.id as partyId, sit.stockItem.id");
             hqlQuery.append(hqlFilter);
 
-            DbSession session = getSession();
+            Session session = getSession();
             Query query = session.createQuery(hqlQuery.toString());
             for (Map.Entry<String, Object> entry : parameterList.entrySet()) {
                 query.setParameter(entry.getKey(), entry.getValue());
@@ -2299,7 +2308,7 @@ public class StockManagementDao extends DaoBase {
             query.setFetchSize(Integer.MIN_VALUE);
             results = query.scroll(ScrollMode.FORWARD_ONLY);
             while (results.next()) {
-                Object[] row = results.get();
+                Object[] row = (Object[]) results.get();
                 Boolean result = consumer.apply(row);
                 if (result == null || result == false) {
                     break;
@@ -2519,7 +2528,7 @@ public class StockManagementDao extends DaoBase {
             session = getStatelessHibernateSession();
             Query query = session.createQuery(hqlQuery.toString());
             if (!groupByParty || !groupByStockBatch || !groupByStockItem) {
-                query.setParameter("nullValue", null, IntegerType.INSTANCE);
+                query.setParameter("nullValue", null, StandardBasicTypes.INTEGER);
             }
 
             for (Map.Entry<String, Object> entry : parameterList.entrySet())
@@ -2533,7 +2542,7 @@ public class StockManagementDao extends DaoBase {
             query.setFetchSize(Integer.MIN_VALUE);
             results = query.scroll(ScrollMode.FORWARD_ONLY);
             while (results.next()) {
-                Object[] row = results.get();
+                Object[] row = (Object[]) results.get();
                 Boolean result = consumer.apply(row);
                 if (result == null || result == false) {
                     break;
@@ -2612,7 +2621,7 @@ public class StockManagementDao extends DaoBase {
             query.setFetchSize(Integer.MIN_VALUE);
             results = query.scroll(ScrollMode.FORWARD_ONLY);
             while (results.next()) {
-                T stockItemInventory = (T) results.get(0);
+                T stockItemInventory = (T) results.get();
                 Boolean result = consumer.apply(stockItemInventory);
                 if (result == null || result == false) {
                     break;
@@ -2965,7 +2974,7 @@ public class StockManagementDao extends DaoBase {
                 " group by sit.party.id, sit.stockItem.id, sit.stockBatch.id");
 
 
-        DbSession dbSession = getSession();
+        Session dbSession = getSession();
         Query query = dbSession.createQuery(hqlQuery.toString());
         query.setParameterList("bids", stockBatchIds);
         query.setParameter("today", DateUtil.today());
@@ -3002,7 +3011,7 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public void deleteReservedTransations(Integer stockOperationId) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session.createQuery("DELETE stockmanagement.ReservedTransaction WHERE stockOperation.id = :id");
 		query.setParameter("id", stockOperationId);
 		query.executeUpdate();
@@ -3216,82 +3225,64 @@ public class StockManagementDao extends DaoBase {
 	
 	public List<Drug> getDrugs(Collection<Integer> drugIds) {
         if (drugIds == null || drugIds.isEmpty()) return new ArrayList<>();
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(Drug.class, "d");
-        criteria.add(Restrictions.in("d.drugId", drugIds));
-        return criteria.list();
+        return getSession().createQuery("from Drug d where d.drugId in (:drugIds)").setParameterList("drugIds", drugIds).list();
     }
 	
 	public List<Concept> getConcepts(Collection<Integer> conceptIds) {
         if (conceptIds == null || conceptIds.isEmpty()) return new ArrayList<>();
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(Concept.class, "c");
-        criteria.add(Restrictions.in("c.conceptId", conceptIds));
-        return criteria.list();
+        return getSession().createQuery("from Concept c where c.conceptId in (:conceptIds)").setParameterList("conceptIds", conceptIds).list();
     }
 	
 	public List<StockItem> getStockItems(Collection<Integer> stockItemIds) {
         if (stockItemIds == null || stockItemIds.isEmpty()) return new ArrayList<>();
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(StockItem.class, "s");
-        criteria.add(Restrictions.in("s.id", stockItemIds));
-        return criteria.list();
+        return getSession().createQuery("from stockmanagement.StockItem s where s.id in (:stockItemIds)").setParameterList("stockItemIds", stockItemIds).list();
     }
 	
 	public List<StockItemPackagingUOM> getStockItemPackagingUOMs(List<StockItemPackagingUOMSearchFilter.ItemGroupFilter> filters) {
         if (filters == null || filters.isEmpty()) return new ArrayList<>();
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(StockItemPackagingUOM.class, "s");
-        if (filters.size() == 1) {
-            StockItemPackagingUOMSearchFilter.ItemGroupFilter filter = filters.get(0);
-            criteria.add(Restrictions.and(Restrictions.eq("s.stockItem.id", filter.getStockItemId()),
-                    Restrictions.in("s.packagingUom.conceptId", filter.getPackagingUomIds())));
-        } else {
-            StockItemPackagingUOMSearchFilter.ItemGroupFilter filter0 = filters.get(0);
-            StockItemPackagingUOMSearchFilter.ItemGroupFilter filter1 = filters.get(1);
-            LogicalExpression orFilter = Restrictions.or(Restrictions.and(Restrictions.eq("s.stockItem.id", filter0.getStockItemId()),
-                            Restrictions.in("s.packagingUom.conceptId", filter0.getPackagingUomIds())),
-                    Restrictions.and(Restrictions.eq("s.stockItem.id", filter1.getStockItemId()),
-                            Restrictions.in("s.packagingUom.conceptId", filter1.getPackagingUomIds())));
-            if (filters.size() > 2) {
-                for (int i = 2; i < filters.size(); i++) {
-                    StockItemPackagingUOMSearchFilter.ItemGroupFilter filter = filters.get(i);
-                    orFilter = Restrictions.or(orFilter, Restrictions.and(Restrictions.eq("s.stockItem.id", filter.getStockItemId()),
-                            Restrictions.in("s.packagingUom.conceptId", filter.getPackagingUomIds())));
-                }
-            }
-            criteria.add(orFilter);
+        StringBuilder hqlFilter = new StringBuilder();
+        HashMap<String, Object> parameterList = new HashMap<>();
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        for (int i = 0; i < filters.size(); i++) {
+            StockItemPackagingUOMSearchFilter.ItemGroupFilter filter = filters.get(i);
+            appendORFilter(hqlFilter, String.format("s.stockItem.id = :stockItemId%1$d and s.packagingUom.conceptId in (:packagingUomIds%1$d)", i));
+            parameterList.put("stockItemId" + i, filter.getStockItemId());
+            parameterWithList.put("packagingUomIds" + i, filter.getPackagingUomIds());
         }
-        return criteria.list();
+        Query query = getSession().createQuery("from stockmanagement.StockItemPackagingUOM s where " + hqlFilter);
+        parameterList.forEach(query::setParameter);
+        parameterWithList.forEach(query::setParameterList);
+        return query.list();
     }
 	
 	public List<StockItem> getStockItemByDrug(Integer drugId) {
-		return getSession().createCriteria(StockItem.class).add(Restrictions.eq("drug.drugId", drugId)).list();
+		return getSession().createQuery("from stockmanagement.StockItem where drug.drugId = :drugId").setParameter("drugId", drugId)
+		        .list();
 	}
 	
 	public List<StockItem> getStockItemByConcept(Integer conceptId) {
-		return getSession().createCriteria(StockItem.class).add(Restrictions.isNull("drug.drugId"))
-		        .add(Restrictions.eq("concept.conceptId", conceptId)).list();
+		return getSession().createQuery("from stockmanagement.StockItem where drug is null and concept.conceptId = :conceptId")
+		        .setParameter("conceptId", conceptId).list();
 	}
 	
 	public StockItemPackagingUOM getStockItemPackagingUOMByConcept(Integer stockItemId, Integer conceptId) {
-		return (StockItemPackagingUOM) getSession().createCriteria(StockItemPackagingUOM.class)
-		        .add(Restrictions.eq("stockItem.id", stockItemId)).add(Restrictions.eq("packagingUom.conceptId", conceptId))
-		        .addOrder(Order.desc("voided")).setMaxResults(1).uniqueResult();
+		return (StockItemPackagingUOM) getSession()
+		        .createQuery(
+		            "from stockmanagement.StockItemPackagingUOM where stockItem.id = :stockItemId and packagingUom.conceptId = :conceptId order by voided desc")
+		        .setParameter("stockItemId", stockItemId).setParameter("conceptId", conceptId).setMaxResults(1).uniqueResult();
 	}
 	
 	public List<OrderItem> getOrderItemsByOrder(Integer... orderIds) {
 		List<Integer> params = Arrays.asList(orderIds);
-		return getSession().createCriteria(OrderItem.class).add(Restrictions.in("order.orderId", params)).list();
+		return getSession().createQuery("from stockmanagement.OrderItem where order.orderId in (:orderIds)")
+		        .setParameterList("orderIds", params).list();
 	}
 	
 	public List<OrderItem> getOrderItemsByEncounter(Integer... encounterIds) {
 		List<Integer> params = Arrays.asList(encounterIds);
-		Criteria criteria = getSession().createCriteria(OrderItem.class);
-		criteria.createAlias("order", "o");
-		criteria.createAlias("o.encounter", "e");
-		
-		return criteria.add(Restrictions.in("e.encounterId", params)).list();
+		return getSession()
+		        .createQuery("select oi from stockmanagement.OrderItem oi join oi.order o join o.encounter e where e.encounterId in (:encounterIds)")
+		        .setParameterList("encounterIds", params).list();
 	}
 	
 	public Result<OrderItemDTO> findOrderItems(OrderItemSearchFilter filter, HashSet<RecordPrivilegeFilter> recordPrivilegeFilters) {
@@ -3625,16 +3616,8 @@ public class StockManagementDao extends DaoBase {
         if (orderIds == null || orderIds.isEmpty()) {
             return new HashMap<>();
         }
-        Criteria criteria = getSession().createCriteria(DrugOrder.class).add(Restrictions.in("orderId", orderIds));
-        Projection projection1 = Projections.property("orderId");
-        Projection projection2 = Projections.property("quantity");
-        Projection projection3 = Projections.property("duration");
-        ProjectionList pList = Projections.projectionList();
-        pList.add(projection1);
-        pList.add(projection2);
-        pList.add(projection3);
-        criteria.setProjection(pList);
-        List result = criteria.list();
+        List result = getSession().createQuery("select d.orderId, d.quantity, d.duration from DrugOrder d where d.orderId in (:orderIds)")
+                .setParameterList("orderIds", orderIds).list();
         HashMap<Integer, Object[]> ids = new HashMap<>();
         for (Object object : result) {
             Object[] row = (Object[]) object;
@@ -3644,12 +3627,12 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public OrderItem getOrderItemByUuid(String uuid) {
-		return (OrderItem) getSession().createCriteria(OrderItem.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (OrderItem) getSession().createQuery("from stockmanagement.OrderItem where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public OrderItem saveOrderItem(OrderItem orderItem) {
-		getSession().saveOrUpdate(orderItem);
-		return orderItem;
+		return HibernateUtil.saveOrUpdate(getSession(), orderItem);
 	}
 	
 	public Result<StockRuleDTO> findStockRules(StockRuleSearchFilter filter, HashSet<RecordPrivilegeFilter> recordPrivilegeFilters) {
@@ -3807,13 +3790,13 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public void voidStockRules(List<String> stockRuleUuids, String reason, int voidedBy) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session
-		        .createQuery("UPDATE stockmanagement.StockRule SET voided=1, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
+		        .createQuery("UPDATE stockmanagement.StockRule SET voided=true, dateVoided=:dateVoided, voidedBy=:voidedBy, voidReason=:reason WHERE uuid in (:uuidList)");
 		query.setParameterList("uuidList", stockRuleUuids);
-		query.setDate("dateVoided", new Date());
-		query.setInteger("voidedBy", voidedBy);
-		query.setString("reason", reason);
+		query.setParameter("dateVoided", new Date(), TemporalType.DATE);
+		query.setParameter("voidedBy", getSession().getReference(User.class, voidedBy));
+		query.setParameter("reason", reason);
 		query.executeUpdate();
 	}
 	
@@ -3846,7 +3829,7 @@ public class StockManagementDao extends DaoBase {
         hqlQuery.append(hqlFilter);
         hqlQuery.append(" order by sr.id");
 
-        DbSession dbSession = getSession();
+        Session dbSession = getSession();
         Query query = dbSession.createQuery(hqlQuery.toString());
         for (Map.Entry<String, Object> entry : parameterList.entrySet())
             query.setParameter(entry.getKey(), entry.getValue());
@@ -3862,7 +3845,7 @@ public class StockManagementDao extends DaoBase {
 		int startIndex = 0;
 		boolean hasMoreUpdatesToDo = true;
 		do {
-			DbSession session = getSession();
+			Session session = getSession();
 			Query query = session
 			        .createQuery("UPDATE stockmanagement.StockBatch SET expiryNotificationDate = :nfdate WHERE id in (:stockBatchIds)");
 			List<Integer> batch = stockBatchIds.stream().skip(startIndex * 100).limit(100).collect(Collectors.toList());
@@ -3883,7 +3866,7 @@ public class StockManagementDao extends DaoBase {
 		int startIndex = 0;
 		boolean hasMoreUpdatesToDo = true;
 		do {
-			DbSession session = getSession();
+			Session session = getSession();
 			Query query = session
 			        .createQuery("UPDATE stockmanagement.StockRule SET lastEvaluation = :today, nextEvaluation = :nextdate WHERE id in (:stockRuleIds)");
 			List<Integer> batch = stockRuleIds.stream().skip(startIndex * 100).limit(100).collect(Collectors.toList());
@@ -3905,7 +3888,7 @@ public class StockManagementDao extends DaoBase {
 		int startIndex = 0;
 		boolean hasMoreUpdatesToDo = true;
 		do {
-			DbSession session = getSession();
+			Session session = getSession();
 			Query query = session
 			        .createQuery("UPDATE stockmanagement.StockRule SET lastActionDate = :today, nextActionDate = :nextdate WHERE id in (:stockRuleIds)");
 			List<Integer> batch = stockRuleIds.stream().skip(startIndex * 100).limit(100).collect(Collectors.toList());
@@ -3988,39 +3971,38 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public BatchJobOwner getBatchJobOwnerByUuid(String uuid) {
-		return (BatchJobOwner) getSession().createCriteria(BatchJobOwner.class).add(Restrictions.eq("uuid", uuid))
+		return (BatchJobOwner) getSession().createQuery("from stockmanagement.BatchJobOwner where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public BatchJobOwner saveBatchJobOwner(BatchJobOwner batchJobOwner) {
-		getSession().saveOrUpdate(batchJobOwner);
-		return batchJobOwner;
+		return HibernateUtil.saveOrUpdate(getSession(), batchJobOwner);
 	}
 	
 	public BatchJob getBatchJobById(Integer id) {
-		return (BatchJob) getSession().createCriteria(BatchJob.class).add(Restrictions.eq("id", id)).uniqueResult();
+		return (BatchJob) getSession().createQuery("from stockmanagement.BatchJob where id = :id").setParameter("id", id)
+		        .uniqueResult();
 	}
 	
 	public BatchJob getBatchJobByUuid(String uuid) {
-		return (BatchJob) getSession().createCriteria(BatchJob.class).add(Restrictions.eq("uuid", uuid)).uniqueResult();
+		return (BatchJob) getSession().createQuery("from stockmanagement.BatchJob where uuid = :uuid").setParameter("uuid", uuid)
+		        .uniqueResult();
 	}
 	
 	public BatchJob saveBatchJob(BatchJob batchJob) {
-		getSession().saveOrUpdate(batchJob);
-		return batchJob;
+		return HibernateUtil.saveOrUpdate(getSession(), batchJob);
 	}
 	
 	public BatchJob getNextActiveBatchJob() {
-        DbSession dbSession = getSession();
-        Criteria criteria = dbSession.createCriteria(BatchJob.class, "bj");
-        criteria.add(Restrictions.in("bj.status", Arrays.asList(BatchJobStatus.Pending, BatchJobStatus.Running)));
-        criteria.add(Restrictions.eq("bj.voided", false));
+        HashMap<String, Collection> parameterWithList = new HashMap<>();
+        StringBuilder hqlQuery = new StringBuilder("select bj from stockmanagement.BatchJob bj where bj.status in (:statuses) and bj.voided = false");
+        parameterWithList.put("statuses", Arrays.asList(BatchJobStatus.Pending, BatchJobStatus.Running));
 
         Result<BatchJob> result = new Result<>();
         result.setPageIndex(0);
         result.setPageSize(1);
 
-        result.setData(executeCriteria(criteria, result, Order.asc("bj.id")));
+        result.setData(executeQuery(null, hqlQuery, result, " order by bj.id asc", null, parameterWithList));
         return result.getData().isEmpty() ? null : result.getData().get(0);
     }
 	
@@ -4411,7 +4393,7 @@ public class StockManagementDao extends DaoBase {
         }
 
         Result<StockOperationLineItem> result = new Result<>();
-        DbSession dbSession = getSession();
+        Session dbSession = getSession();
         hqlQuery.append(" order by so.id asc, soi.id asc");
         Query query = dbSession.createQuery(hqlQuery.toString());
         if (parameterList != null) {
@@ -4540,8 +4522,8 @@ public class StockManagementDao extends DaoBase {
 	
 	public String getUserEmail(Integer userId) {
 		try {
-			DbSession session = getSession();
-			Query query = session.createSQLQuery("SELECT email FROM users WHERE user_id = :p");
+			Session session = getSession();
+			Query query = session.createNativeQuery("SELECT email FROM users WHERE user_id = :p");
 			query.setParameter("p", userId);
 			List result = query.list();
 			if (result.isEmpty())
@@ -5040,7 +5022,7 @@ public class StockManagementDao extends DaoBase {
         try {
             dbSession = getStatelessHibernateSession();
             hqlQuery.append(" order by o.order_id asc");
-            Query query = dbSession.createSQLQuery(hqlQuery.toString());
+            Query query = dbSession.createNativeQuery(hqlQuery.toString());
             query.setReadOnly(true);
             if (parameterList != null) {
                 for (Map.Entry<String, Object> entry : parameterList.entrySet())
@@ -5232,11 +5214,12 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public List<BatchJob> getExpiredBatchJobs() {
-		return getSession().createCriteria(BatchJob.class).add(Restrictions.le("expiration", new Date())).list();
+		return getSession().createQuery("from stockmanagement.BatchJob where expiration <= :now").setParameter("now", new Date())
+		        .list();
 	}
 	
 	public void deleteBatchJob(BatchJob batchJob) {
-		DbSession session = getSession();
+		Session session = getSession();
 		Query query = session.createQuery("DELETE FROM stockmanagement.BatchJobOwner WHERE batchJob = :p");
 		query.setParameter("p", batchJob);
 		query.executeUpdate();
@@ -5251,7 +5234,7 @@ public class StockManagementDao extends DaoBase {
             return new HashMap<>();
         }
 
-        DbSession session = getSession();
+        Session session = getSession();
         Query query = session.createQuery("SELECT max(sit.id) as id from stockmanagement.StockItemTransaction sit where sit.stockOperation.id = :soid");
         query.setParameter("soid", stockOperationId);
         List result = query.list();
@@ -5276,26 +5259,24 @@ public class StockManagementDao extends DaoBase {
     }
 	
 	public StockItemReference getStockItemByReference(StockSource stockSource, String stockReferenceCode) {
-		Criteria criteria = getSession().createCriteria(StockItemReference.class);
-		criteria.add(Restrictions.eq("referenceSource", stockSource));
-		criteria.add(Restrictions.eq("stockReferenceCode", stockReferenceCode));
-		return (StockItemReference) criteria.setMaxResults(1).uniqueResult();
+		return (StockItemReference) getSession()
+		        .createQuery(
+		            "from stockmanagement.StockItemReference where referenceSource = :referenceSource and stockReferenceCode = :stockReferenceCode")
+		        .setParameter("referenceSource", stockSource).setParameter("stockReferenceCode", stockReferenceCode)
+		        .setMaxResults(1).uniqueResult();
 	}
 	
 	public StockItemReference saveStockItemReference(StockItemReference stockItemReference) {
-		getSession().saveOrUpdate(stockItemReference);
-		return stockItemReference;
+		return HibernateUtil.saveOrUpdate(getSession(), stockItemReference);
 	}
 	
 	public StockItemReference getStockItemReferenceByUuid(String uuid) {
-		return (StockItemReference) getSession().createCriteria(StockItemReference.class).add(Restrictions.eq("uuid", uuid))
+		return (StockItemReference) getSession().createQuery("from stockmanagement.StockItemReference where uuid = :uuid").setParameter("uuid", uuid)
 		        .uniqueResult();
 	}
 	
 	public List<StockItemReference> getStockItemReferenceByStockItem(StockItem stockItem) {
-		Criteria criteria = getSession().createCriteria(StockItemReference.class);
-		criteria.add(Restrictions.eq("stockItem", stockItem));
-		criteria.add(Restrictions.eq("voided", false));
-		return criteria.list();
+		return getSession().createQuery("from stockmanagement.StockItemReference where stockItem = :stockItem and voided = false")
+		        .setParameter("stockItem", stockItem).list();
 	}
 }

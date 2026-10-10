@@ -9,11 +9,12 @@
  */
 package org.openmrs.module.stockmanagement;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
-import org.hibernate.Query;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -21,7 +22,6 @@ import org.openmrs.*;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
-import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.module.stockmanagement.api.Privileges;
 import org.openmrs.module.stockmanagement.api.dao.StockManagementDao;
@@ -33,7 +33,7 @@ import org.openmrs.module.stockmanagement.api.jobs.StockItemImportJob;
 import org.openmrs.module.stockmanagement.api.model.*;
 import org.openmrs.module.stockmanagement.api.utils.DateUtil;
 import org.openmrs.module.stockmanagement.tasks.LocationTagsSynchronize;
-import org.openmrs.test.BaseModuleContextSensitiveTest;
+import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.Array;
@@ -46,7 +46,8 @@ import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a unit test, which verifies logic in StockManagementService. It doesn't extend
@@ -62,7 +63,7 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 	
 	private StockManagementDao daoInstance;
 	
-	private static EntityUtil entityUtil;
+	private EntityUtil entityUtil;
 	
 	private StockManagementDao dao() {
 		if (daoInstance == null) {
@@ -72,7 +73,7 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 		return daoInstance;
 	}
 	
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		initializeInMemoryDatabase();
 		executeDataSet(EntityUtil.STOCK_OPERATION_TYPE_DATA_SET);
@@ -97,9 +98,9 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 	//	@Mock
 	//	UserService userService;
 	
-	@Before
+	@BeforeEach
 	public void setupMocks() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 	}
 	
 	@Test
@@ -391,7 +392,67 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 		stockManagementService.setDao(dao());
 		dao().getFlattenedUserRoleScopesByUser(eu().getUser(), new HashSet<Role>(Arrays.asList(eu().getRole())), null, null);
 	}
-	
+
+	@Test
+	public void getFlattenedUserRoleScopesByUser_shouldFilterByLocationIncludingDescendants() {
+		User user = Context.getUserService().getUser(501);
+		Role role = Context.getUserService().getRole("Provider");
+		Location parent = Context.getLocationService().getLocation(1);
+		Location child = Context.getLocationService().getLocation(2);
+		Location unrelated = Context.getLocationService().getLocation(3);
+		Date now = new Date();
+
+		UserRoleScope userRoleScope = new UserRoleScope();
+		userRoleScope.setUser(user);
+		userRoleScope.setRole(role);
+		userRoleScope.setEnabled(true);
+		userRoleScope.setPermanent(true);
+		userRoleScope.setCreator(user);
+		userRoleScope.setDateCreated(now);
+		dao().saveUserRoleScope(userRoleScope);
+
+		UserRoleScopeLocation scopeLocation = new UserRoleScopeLocation();
+		scopeLocation.setUserRoleScope(userRoleScope);
+		scopeLocation.setLocation(parent);
+		scopeLocation.setEnableDescendants(true);
+		scopeLocation.setCreator(user);
+		scopeLocation.setDateCreated(now);
+		dao().saveUserRoleScopeLocation(scopeLocation);
+
+		UserRoleScopeOperationType scopeOperationType = new UserRoleScopeOperationType();
+		scopeOperationType.setUserRoleScope(userRoleScope);
+		scopeOperationType.setStockOperationType(dao().getAllStockOperationTypes().get(0));
+		scopeOperationType.setCreator(user);
+		scopeOperationType.setDateCreated(now);
+		dao().saveUserRoleScopeOperationType(scopeOperationType);
+
+		for (Location location : Arrays.asList(parent, child)) {
+			LocationTree node = new LocationTree();
+			node.setParentLocationId(parent.getLocationId());
+			node.setChildLocationId(location.getLocationId());
+			node.setDepth(location.equals(parent) ? 0 : 1);
+			dao().saveLocationTree(node);
+
+			Party party = new Party();
+			party.setLocation(location);
+			party.setCreator(user);
+			party.setDateCreated(now);
+			dao().saveParty(party);
+		}
+		Context.flushSession();
+
+		Set<Role> roles = new HashSet<>(Arrays.asList(role));
+		assertThat(locationUuids(dao().getFlattenedUserRoleScopesByUser(user, roles, parent, null)),
+		    containsInAnyOrder(parent.getUuid(), child.getUuid()));
+		assertThat(locationUuids(dao().getFlattenedUserRoleScopesByUser(user, roles, child, null)),
+		    is(Collections.singletonList(child.getUuid())));
+		assertThat(dao().getFlattenedUserRoleScopesByUser(user, roles, unrelated, null), is(empty()));
+	}
+
+	private List<String> locationUuids(List<PrivilegeScope> privilegeScopes) {
+		return privilegeScopes.stream().map(PrivilegeScope::getLocationUuid).collect(Collectors.toList());
+	}
+
 	@Test
     public void findStockItemPackagingUOMs_shouldFilterOnAllCriteria(){
         stockManagementService.setDao(dao());
@@ -689,7 +750,7 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 
         assertEquals(5, stockItemDTOs.getData().size());
         Optional<StockItemDTO> stockItemOptional = stockItemDTOs.getData().stream().filter(p -> p.getDrugId().equals(2)).findFirst();
-        assertTrue("Drug Stock item is present", stockItemOptional.isPresent());
+        assertTrue(stockItemOptional.isPresent(), "Drug Stock item is present");
         StockItemDTO stockItem = stockItemOptional.get();
         assertTrue(stockItem.getHasExpiration());
         assertEquals(stockItem.getCommonName(), "TEST 2");
@@ -704,7 +765,7 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 
 
         stockItemOptional = stockItemDTOs.getData().stream().filter(p -> p.getConceptId().equals(5497)).findFirst();
-        assertTrue("Concenpt Stock item is present", stockItemOptional.isPresent());
+        assertTrue(stockItemOptional.isPresent(), "Concenpt Stock item is present");
         stockItem = stockItemOptional.get();
         assertFalse(stockItem.getHasExpiration());
         assertEquals(stockItem.getCommonName(), "TEST 2");
@@ -720,7 +781,7 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 	}
 	
 	private void deleteAllStockItems() {
-		DbSession session = dao().getSession();
+		Session session = dao().getSession();
 		Query query = session.createQuery("delete from stockmanagement.StockItem");
 		query.executeUpdate();
 	}
@@ -854,7 +915,7 @@ public class StockManagementServiceTest extends BaseModuleContextSensitiveTest {
 	}
 	
 	private void updateOrderScheduledDate(Order order, Date scheduledDate) {
-		DbSession session = dao().getSession();
+		Session session = dao().getSession();
 		Query query = session.createQuery("Update Order set scheduledDate = :scheduledDate where orderId = :orderId");
 		query.setParameter("scheduledDate", scheduledDate);
 		query.setParameter("orderId", order.getOrderId());

@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/stockitemreference", supportedClass = StockItemReferenceDTO.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class StockItemReferenceResource extends ResourceBase<StockItemReferenceDTO> {
 	
 	@Override

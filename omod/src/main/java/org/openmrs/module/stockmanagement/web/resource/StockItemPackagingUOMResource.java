@@ -4,7 +4,7 @@ import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
 import io.swagger.models.properties.StringProperty;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.stockmanagement.api.ModuleConstants;
 import org.openmrs.module.stockmanagement.api.dto.*;
@@ -21,12 +21,13 @@ import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/stockitempackaginguom", supportedClass = StockItemPackagingUOMDTO.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class StockItemPackagingUOMResource extends ResourceBase<StockItemPackagingUOMDTO> {
 	
 	@Override
@@ -69,6 +70,7 @@ public class StockItemPackagingUOMResource extends ResourceBase<StockItemPackagi
 	
 	@Override
 	public StockItemPackagingUOMDTO save(StockItemPackagingUOMDTO delegate) {
+		ValidateUtil.validate(delegate);
 		StockItemPackagingUOM stockItemPackagingUOM = getStockManagementService().saveStockItemPackagingUOM(delegate);
 		return getByUniqueId(stockItemPackagingUOM.getUuid());
 	}

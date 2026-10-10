@@ -3,7 +3,7 @@ package org.openmrs.module.stockmanagement.web.resource;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
 import io.swagger.models.properties.*;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.stockmanagement.api.ModuleConstants;
@@ -23,12 +23,13 @@ import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceD
 import org.openmrs.module.webservices.rest.web.response.IllegalRequestException;
 import org.openmrs.module.webservices.rest.web.response.ResourceDoesNotSupportOperationException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
+import org.openmrs.validator.ValidateUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Resource(name = RestConstants.VERSION_1 + "/" + ModuleConstants.MODULE_ID + "/userrolescope", supportedClass = UserRoleScopeDTO.class, supportedOpenmrsVersions = {
-        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*" })
+        "1.9.*", "1.10.*", "1.11.*", "1.12.*", "2.*", "3.*" })
 public class UserRoleScopeResource extends ResourceBase<UserRoleScopeDTO> {
 	
 	@Override
@@ -103,6 +104,7 @@ public class UserRoleScopeResource extends ResourceBase<UserRoleScopeDTO> {
 	
 	@Override
 	public UserRoleScopeDTO save(UserRoleScopeDTO delegate) {
+		ValidateUtil.validate(delegate);
 		UserRoleScope userRoleScope = getStockManagementService().saveUserRoleScope(delegate);
 		return getByUniqueId(userRoleScope.getUuid());
 	}
